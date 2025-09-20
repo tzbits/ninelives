@@ -1,0 +1,106 @@
+/* -- game.css -- */
+body {
+    max-width: 580px;
+    margin-top: 0px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0px;
+    font: normal 20px/24px Garamond, Georgia, serif;
+    color: #222;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+.link {
+    background-color: #FFFFFF;
+    color: black;
+    border: 1px solid #999999;
+    border-radius: 10px;
+    padding: 5px 15px 3px 15px;
+    display: inline-block;
+    cursor: pointer;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 3px 10px 0 rgba(0,0,0,0.19);
+    font-size: 80%;
+ }
+
+.link:hover {
+    background-color: #875;
+    box-shadow: 0 6px 8px 0 rgba(0,0,0,0.24), 0 8px 25px 0 rgba(0,0,0,0.19);
+}
+
+div#banner-container {
+    position: fixed;
+    background-color: whitesmoke;
+    top: 0;
+    padding: 8px 0px 0px 0px;
+    margin: 0px 0px 0px 0px;
+}
+
+img#banner {
+    max-width: 580px;
+    max-height: 195px;
+    border-radius: 15px;
+}
+
+div#story {
+    margin-top: 215px;
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+    margin-bottom: calc(100vh);
+}
+
+.StoryElt p:first-child {
+    margin-top: 30px;
+}
+
+.StoryElt p {
+    line-height: 150%;
+}
+
+.center {
+    text-align: center;
+}
+
+.choices {
+   border-top: 1px solid #000;
+   margin-top: 1em;
+   padding-top: 1em;
+}
+
+.choice {
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+.wrapped-choices {
+    border-top: 1px solid #000;
+    margin-top: 1em;
+    padding-top: 1em;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+}
+
+.gameover {
+    border-bottom: 1px solid #000;
+}
+
+@media only screen and (max-width: 580px) {
+    div#banner-container {
+        padding: 0px 0px 0px 0px;
+    }
+    img#banner {
+        max-width: 100%;
+        max-height: calc(100% * 0.33620);
+        border-radius: 0;
+    }
+    div#story {
+        margin-top: calc(100vw * 0.33620 + 20px);
+        margin-left: 1em;
+        margin-right: 1em;
+        margin-bottom: calc(100vh)
+    }
+}
+/* -- game.css ends here -- */
