@@ -1,0 +1,217 @@
+!scope cloak
+
+
+=0= The beginning
+
+!img img/title.png
+
+| game.useRandomChoiceOrder = true
+
+Hurrying through the rainswept November night, you're glad to see the bright lights of the Opera House. It's surprising that there aren't more people about but, hey, what do you expect in a cheap demo game...?
+
+>street look around
+
+
+#-------------------
+# Cloak mechanics
+#-------------------
+
+
+=cloak=
+
+A handsome cloak, of velvet trimmed with satin, and slightly splattered with raindrops. Its blackness is so deep that it almost seems to suck light from the room.
+
+| back();
+
+
+=inventory=
+
+| // set this to false so inventory disappears as a choice
+| // until something changes.
+| story.playerChanged = false;
+| if (story.cloak.playerIsWearing()) {
+
+You're wearing a velvet cloak.
+
+| story.cloak.noticed = true;
+|
+| } else {
+
+You have no possessions.
+
+| }
+| back();
+
+
+=dropcloak=
+
+| story.cloak.dropTo(game.priorNode());
+| story.playerChanged = true;
+
+You drop the cloak.
+
+| back();
+
+
+=takecloak=
+
+| story.cloak.take();
+| story.playerChanged = true;
+
+You put on the cloak.
+
+| back();
+
+
+#-------------------
+# Game Nodes
+#-------------------
+
+=street= Street
+
+| if (game.visitCount() > 1) {
+
+!img img/operahouseworse.png
+
+You go back outside.
+
+| } else {
+
+!img img/operahouse.png
+
+| }
+| const howBad = (game.visitCount() > 1) ? "MUCH worse" : "worse";
+
+The bright lights of the Opera House flood the south side of the street. The weather outside seems to be getting ${howBad}.
+
+>foyer south
+
+
+=streetfail= Instead of going north from the foyer
+
+You can't go back outside now.
+
+You've only just arrived, and besides, the weather outside seems to be getting much worse.
+
+| back()
+
+
+=foyer=
+
+| game.img('img/foyer.png')
+
+Foyer of the Opera House
+
+You are standing in a spacious hall, splendidly decorated in red and gold, with glittering chandeliers overhead. The entrance from the street is to the north, and there are doorways south and west.
+
+
+>inventory ? story.playerChanged; "inventory"
+>cloak ? story.cloak.isVisible(); "examine cloak"
+>dropcloak ? story.cloak.canDrop(); "drop Cloak"
+>takecloak ? story.cloak.canTake(); "take Cloak"
+>street ? game.visitCount("=street=") < 2; "north"
+>streetfail ? game.visitCount("=street=") >= 2; "north"
+>bar ? story.cloak.locationIs("=hook="); "south"
+>dark ? !story.cloak.locationIs("=hook="); "south"
+>cloakroom west
+
+
+=cloakroom=
+
+| if (story.cloak.locationIs("=hook=")) {
+|   game.img('img/cloakroomwithcloak.png')
+| } else {
+|   game.img('img/cloakroom.png')
+| }
+
+Cloakroom
+
+The walls of this small room were clearly once lined with hooks, though now only one remains. The exit is a door to the east.
+
+| const canHang = story.cloak.canDrop()
+|    && game.isVisited('=hook=');
+
+>hook examine hook
+>foyer east
+>dropcloak ? story.cloak.canDrop() && !game.isVisited('=hook='); "drop cloak"
+>hangcloak ? story.cloak.canDrop() && game.isVisited('=hook='); "drop cloak"
+>takecloak ? story.cloak.canTake(); "take cloak"
+>inventory ? story.playerChanged; "inventory"
+>cloak ? story.cloak.isVisible(); "examine cloak"
+
+
+=hook= Hook
+
+| let details = story.cloak.locationIs("=hook=")
+|   ? `with a cloak hanging on it`
+|   : `screwed to the wall`
+
+It's just a small brass hook, ${details}.
+
+|
+| back();
+
+
+=hangcloak=
+
+You take off the velvet cloak.
+
+You put the velvet cloak on the small brass hook.
+
+| story.cloak.dropTo("=hook=");
+| story.playerChanged = true;
+|
+| back();
+
+
+=dark=
+
+!img img/dark.png
+
+In The Dark.
+
+You are surrounded by darkness.
+
+>blunder look around
+>foyer north
+
+
+=blunder=
+
+| if (game.visitCount() <= 1) {
+|     game.say(`In the dark? You could easily disturb something.`)
+| } else {
+|     game.say(`Blundering around in the dark isn't a good idea!`)
+|     story.message.isTrampled = true
+| }
+
+>blunder look around some more
+>foyer north
+
+
+=bar=
+
+!img img/bar.png
+
+Foyer Bar
+
+The bar, much rougher than you'd have guessed after the opulence of the foyer to the north, is completely empty. There seems to be some sort of message scrawled in the sawdust on the floor.
+
+>message examine message
+
+
+=message=
+
+| if (story.message.isTrampled) {
+
+The message has been carelessly trampled, making it difficult to read. You can just distinguish the words...
+
+!gameover Game Over. You have lost.
+
+| } else {
+
+The message, neatly marked in the sawdust, reads...
+
+!gameover Game Over. You have won!
+
+| }
