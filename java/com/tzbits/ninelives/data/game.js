@@ -135,7 +135,7 @@ export class GameNode extends AbstractGameNode {
 
 class Player extends AbstractGameNode {
   constructor() {
-    super("=g:player=")
+    super("g:player")
     // Player always starts at node "=g:0="
     this.location = "=g:0="
     this.label = "yourself"
