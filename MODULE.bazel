@@ -1,0 +1,27 @@
+module(name = "ninelives_repo")
+
+# Declare the rules_jvm_external dependency
+bazel_dep(name = "rules_jvm_external", version = "6.3")
+
+maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
+
+# To generate rules_jvm_external++maven+maven_install.json:
+#   bazel run @maven//:pin
+maven.install(
+    name = "tzbits_maven",
+    artifacts = [
+        "com.google.auto.value:auto-value-annotations:1.10.1",
+        "com.google.auto.value:auto-value:1.10.1",
+        "com.google.guava:guava:33.4.8-jre",
+        "com.google.truth:truth:1.4.2",
+        "info.picocli:picocli:4.6.1",
+        "junit:junit:4.13.2",
+        "org.jcommander:jcommander:2.0",
+    ],
+    repositories = [
+        "https://repo1.maven.org/maven2",
+    ],
+)
+
+# Make the repository created by the extension available to your project
+use_repo(maven, "tzbits_maven")
