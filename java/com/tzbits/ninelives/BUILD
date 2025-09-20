@@ -46,4 +46,4 @@ filegroup(
 # story.js is not in the file group because it is only included
 # in the runfiles if the project doesn't already have a story.js
 # file that the story author provided.
-exports_files(["publish.sh", "data/story.js"])
+exports_files(["data/story.js"])
