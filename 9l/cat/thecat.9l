@@ -1,0 +1,106 @@
+=0=
+
+!img banner0.jpg
+
+Something behind the book shelf smells like cheese.
+
+>1 Sniff behind the book shelf.
+>2 Meow loudly.
+
+=1=
+
+You poke your nose behind the book shelf and sniff. The aroma
+becomes stronger to your left, and you follow it. You press in, but
+your head doesn't fit.
+
+Snap! A mouse trap crushes your nose. You can't breath.
+
+!gameover Good thing you have 9 lives.
+
+>0 Try Again
+
+=2=
+
+You meow loudly. Your owner comes over and pets you.
+
+"Aww, what's the matter? Why are you meowing?" she asks and reaches
+out to pet you.
+
+>3 Bite her hand.
+>4 Purr when she pets you.
+
+=3=
+
+She reaches toward you to pet you on the head. You bare your teeth,
+then sink them into her hand.
+
+She screams and kicks you. Then she picks you up and throws you
+outside. Injured from the kick, you are not able to run away when
+night falls and the hungry coyotes approach you.
+
+!gameover Good thing you have 9 lives.
+
+>2 Insert coin to continue ...
+
+=4=
+
+She reaches toward you to pet you on the head. You lean in to her hand
+and purr.
+
+"Aww, so sweet," she says. "Do you want to go outside?" She walks
+over to the door and opens it.
+
+>5 You go outside.
+>6 You sit down in defiance by the book shelf.
+
+=5=
+
+${choice.txt} For some reason your owner never lets you back
+in. Night comes. You scratch at the door, but no one opens it. You go
+to the back door. Same. The last thing you remember hearing is the
+yipping of coyotes.
+
+!gameover Good thing you have 9 lives.
+
+>4 Try Again
+
+=6=
+
+${choice.txt}
+
+"Aww, do you want some cheese?" She goes to the fridge and gets a
+slice and puts it in your bowl.
+
+Just then, a mouse runs by.
+
+>7 Eat cheese.
+>8 Chase mouse.
+
+=7=
+
+You eat the cheese.
+
+Then you realize the only reason she gave it to you was because it
+had spoiled. The mold in the cheese alters your perception. You
+imagine a vicious dog is coming at you. It seems so real that you
+run outside to get away from it. You run aimlessly into the street
+and get hit by a car.
+
+!gameover Good thing you have 9 lives.
+
+>6 Try Again
+
+=8=
+
+You chase the mouse around the house. It's a darty little thing,
+but your cat prowess is too much for it. You catch it, toy with it
+a bit, and make it think you are going to set it free. Then you bite
+its neck.
+
+!c You've realized your potential as a cat.
+
+!c You Win!
+
+However,
+
+>10 you realize something ...
