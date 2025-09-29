@@ -20,6 +20,7 @@ public class TranspilerNode {
     out.append(String.format("game.gameNodes['%s'] =\n", id));
     out.append(String.format("new GameNode('%s').setExecFn(function(game, choice) {\n", id));
     out.append(String.format("game.player.location = '%s';\n", id));
+    out.append(String.format("game.scope = '%s';\n", transpiler.scope));
 
     Preconditions.checkNotNull(rest, "rest cannot be null");
 
@@ -27,7 +28,7 @@ public class TranspilerNode {
            && !rest.getFirst().lineType().equals(LineType.NODE)) {
       rest = transpiler.transpileInNode(out, rest);
     }
-
+    out.append("game.scope = 'g';\n");
     out.append("});\n");
 
     return rest;

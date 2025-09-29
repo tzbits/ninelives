@@ -37,16 +37,25 @@ public class TranspilerChoice {
     int idEnd = spacePos == -1 ? line.length() : spacePos;
     String nodeId = transpiler.resolveNodeId(line.substring(1, idEnd));
     String rest = line.substring(idEnd).trim();
-    String txt = rest.isEmpty() ? "next" :  rest;
-    int qPos = rest.charAt(0) == '?' ? 0 : -1;
-    int scPos = qPos == 0 ? rest.indexOf(';') : -1;
-    boolean isConditioned = qPos != -1 && scPos != -1;
-    if (!isConditioned) {
+    String txt = rest.isEmpty() ? "continue" :  rest;
+    int qPos = rest.isEmpty() ? -1 : rest.charAt(0) == '?' ? 0 : -1;
+    int scPos = rest.isEmpty() ? -1 : rest.indexOf(';');
+
+    if (qPos == -1 && scPos == -1) {
       return String.format("game.choice(\"%s\", `%s`)%s",
                            nodeId,
                            txt,
                            isLast ? "" : ",");
     }
+
+    if (qPos == -1 && scPos != -1) {
+      return String.format("game.choice(\"%s\", `%s`, %s)%s",
+                           nodeId,
+                           txt.substring(0, scPos).trim(),
+                           txt.substring(scPos + 1).trim(),
+                           isLast ? "" : ",");
+    }
+
     String condition = rest.substring(qPos + 1, scPos);
     txt = rest.substring(scPos + 1).trim();
     // Note: second arg to choice is not quoted

@@ -1,4 +1,4 @@
-/* helpers.js */
+/* story.js */
 
 import {game, GameItem} from "./game.js";
 
@@ -25,15 +25,20 @@ class Cloak {
   }
 
   canDrop() {
-    return this.noticed && this.playerIsWearing();
+    return this.noticed
+      && this.playerIsWearing()
+      && game.currentNode() == "=cloak:cloakroom=";
   }
 
   canTake() {
     return !this.playerIsWearing()
       && this.locationIs(game.currentNode())
   }
+
   isVisible() {
-    return this.canDrop() || this.canTake();
+    return this.noticed
+      && (this.locationIs(game.currentNode())
+          || this.playerIsWearing());
   }
 }
 

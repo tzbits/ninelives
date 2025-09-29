@@ -75,7 +75,11 @@ class GameView {
       choiceElt.classList.add('choice')
       const linkElt = document.createElement("span")
       linkElt.classList.add('link')
-      linkElt.innerHTML = game.enableDebug ? `${choice.txt} (${choice.nodeId})` : `${choice.txt}`
+      let text = `${choice.txt}`;
+      if (game.enableDebug && game.debugVerbosity > 0) {
+        text += ` (${choice.nodeId})`;
+      }
+      linkElt.innerHTML = text;
       linkElt.onclick = function () {
         choicesElt.remove()
         game.step(choice)
@@ -112,18 +116,34 @@ export class AbstractGameNode {
           + ` is not implemented. Choice text was: "${choice.txt}".`)
     }
   }
+
   exec(game, choice) { return this.execFn(game, choice) }
+
   setExecFn(execFn) {
     this.execFn = execFn
     return this
   }
+
   setLabel(label) {
     this.label = label
     return this
   }
+
   setLocation(location) {
     this.location = location
     return this
+  }
+
+  firstVisit() {
+    return game.nodeVisits[this.nodeId] == 1;
+  }
+
+  enteredFrom(...ids) {
+    return ids.map((id) => game.resolveScope(id)).includes(game.priorNode());
+  }
+
+  visitCount() {
+    return game.visitCount(this.nodeId);
   }
 }
 
@@ -151,9 +171,10 @@ export class GameItem extends AbstractGameNode {
 }
 
 class Choice {
-  constructor(toNodeId, txt) {
-    this.nodeId = toNodeId
-    this.txt = txt
+  constructor(toNodeId, txt, data=[]) {
+    this.nodeId = toNodeId;
+    this.txt = txt;
+    this.data = data;
   }
 }
 
@@ -179,6 +200,7 @@ class Game {
 
     /** Includes debug info when clicking through the game. */
     this.enableDebug = false
+    this.debugVerbosity = 0;
 
     /** Set this function to run on load and take control of stepping through a path in the story. */
     this.debugOnLoadFn = null
@@ -283,6 +305,10 @@ class Game {
     this.gameView.finishStoryElt()
   }
 
+  getNode(id) {
+    return this.gameNodes[this.resolveScope(id)];
+  }
+
   /**
    * Returns the nodeId set that `step` is running. This is meant to be referred to
    * from other downstream methods called within the nodes's exec method.
@@ -300,15 +326,20 @@ class Game {
       return this.nodeVisits[this.currentNode()]
     }
     const id = this.resolveScope(nodeId);
-    const ret = this.nodeVisits[id];
-    if (!ret) {
+    const nd = this.gameNodes[id];
+    if (!nd) {
       throw `${nodeId} (${id}) not found.`;
     }
-    return ret;
+    const ret = this.nodeVisits[id];
+    return ret || 0;
   }
 
   isVisited(nodeId) {
     const id = this.resolveScope(nodeId);
+    const nd = this.gameNodes[id];
+    if (!nd) {
+      throw `${nodeId} (${id}) not found.`;
+    }
     return id in this.nodeVisits && this.nodeVisits[id] > 0
   }
 
@@ -323,9 +354,14 @@ class Game {
   }
 
   outputDebugInfo(choice) {
-    const elt = document.createElement('pre')
-    elt.innerText = `choice: ${JSON.stringify(choice)}`
-    document.getElementById('story').append(elt)
+    if (this.debugVerbosity > 0) {
+      const elt = document.createElement('pre')
+      elt.innerText = `choice: ${JSON.stringify(choice)}`
+      document.getElementById('story').append(elt)
+    } else {
+      const elt = document.createElement('hr')
+      document.getElementById('story').append(elt)
+    }
     console.log(`game.choice('${choice.nodeId}', '${choice.txt}')`)
   }
 
@@ -337,8 +373,8 @@ class Game {
     this.gameView.sayWith(styleCode, txt)
   }
 
-  choice(nodeId, txt) {
-    return new Choice(this.resolveScope(nodeId), txt)
+  choice(nodeId, txt, data=[]) {
+    return new Choice(this.resolveScope(nodeId), txt, data)
   }
 
   chooseFrom(choices) {

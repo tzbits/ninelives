@@ -1,13 +1,16 @@
 !scope cloak
 
 
-=0= The beginning
+=g:0= The beginning
 
 !img img/title.png
 
 | game.useRandomChoiceOrder = true
 
-Hurrying through the rainswept November night, you're glad to see the bright lights of the Opera House. It's surprising that there aren't more people about but, hey, what do you expect in a cheap demo game...?
+Hurrying through the rainswept November night, you're glad to see
+the bright lights of the Opera House. It's surprising that there
+aren't more people about but, hey, what do you expect in a cheap
+demo game...?
 
 >street look around
 
@@ -19,7 +22,11 @@ Hurrying through the rainswept November night, you're glad to see the bright lig
 
 =cloak=
 
-A handsome cloak, of velvet trimmed with satin, and slightly splattered with raindrops. Its blackness is so deep that it almost seems to suck light from the room.
+A handsome cloak, of velvet trimmed with satin, and slightly
+splattered with raindrops. Its blackness is so deep that it
+almost seems to suck light from the room.
+
+| story.cloak.noticed = true;
 
 | back();
 
@@ -63,6 +70,18 @@ You put on the cloak.
 | back();
 
 
+=hangcloak=
+
+You take off the velvet cloak.
+
+You put the velvet cloak on the small brass hook.
+
+| story.cloak.dropTo("=hook=");
+| story.playerChanged = true;
+|
+| back();
+
+
 #-------------------
 # Game Nodes
 #-------------------
@@ -82,7 +101,8 @@ You go back outside.
 | }
 | const howBad = (game.visitCount() > 1) ? "MUCH worse" : "worse";
 
-The bright lights of the Opera House flood the south side of the street. The weather outside seems to be getting ${howBad}.
+The bright lights of the Opera House flood the south side of the
+street. The weather outside seems to be getting ${howBad}.
 
 >foyer south
 
@@ -91,7 +111,8 @@ The bright lights of the Opera House flood the south side of the street. The wea
 
 You can't go back outside now.
 
-You've only just arrived, and besides, the weather outside seems to be getting much worse.
+You've only just arrived, and besides, the weather outside seems
+to be getting much worse.
 
 | back()
 
@@ -102,17 +123,18 @@ You've only just arrived, and besides, the weather outside seems to be getting m
 
 Foyer of the Opera House
 
-You are standing in a spacious hall, splendidly decorated in red and gold, with glittering chandeliers overhead. The entrance from the street is to the north, and there are doorways south and west.
+You are standing in a spacious hall, splendidly decorated in red
+and gold, with glittering chandeliers overhead. The entrance from
+the street is to the north, and there are doorways south and
+west.
 
 
 >inventory ? story.playerChanged; "inventory"
 >cloak ? story.cloak.isVisible(); "examine cloak"
->dropcloak ? story.cloak.canDrop(); "drop Cloak"
->takecloak ? story.cloak.canTake(); "take Cloak"
 >street ? game.visitCount("=street=") < 2; "north"
 >streetfail ? game.visitCount("=street=") >= 2; "north"
->bar ? story.cloak.locationIs("=hook="); "south"
->dark ? !story.cloak.locationIs("=hook="); "south"
+>bar ? !story.cloak.playerIsWearing(); "south"
+>dark ? story.cloak.playerIsWearing(); "south"
 >cloakroom west
 
 
@@ -126,15 +148,21 @@ You are standing in a spacious hall, splendidly decorated in red and gold, with 
 
 Cloakroom
 
-The walls of this small room were clearly once lined with hooks, though now only one remains. The exit is a door to the east.
+The walls of this small room were clearly once lined with hooks,
+though now only one remains. The exit is a door to the east.
 
-| const canHang = story.cloak.canDrop()
-|    && game.isVisited('=hook=');
+| if (story.cloak.location == game.currentNode()) {
+
+There is a cloak on the floor.
+
+| }
+
+| const canDrop = story.cloak.canDrop();
 
 >hook examine hook
 >foyer east
->dropcloak ? story.cloak.canDrop() && !game.isVisited('=hook='); "drop cloak"
->hangcloak ? story.cloak.canDrop() && game.isVisited('=hook='); "drop cloak"
+>dropcloak ? canDrop && !game.isVisited('=hook='); "drop cloak"
+>hangcloak ? canDrop && game.isVisited('=hook='); "drop cloak"
 >takecloak ? story.cloak.canTake(); "take cloak"
 >inventory ? story.playerChanged; "inventory"
 >cloak ? story.cloak.isVisible(); "examine cloak"
@@ -148,18 +176,6 @@ The walls of this small room were clearly once lined with hooks, though now only
 
 It's just a small brass hook, ${details}.
 
-|
-| back();
-
-
-=hangcloak=
-
-You take off the velvet cloak.
-
-You put the velvet cloak on the small brass hook.
-
-| story.cloak.dropTo("=hook=");
-| story.playerChanged = true;
 |
 | back();
 
@@ -195,7 +211,9 @@ You are surrounded by darkness.
 
 Foyer Bar
 
-The bar, much rougher than you'd have guessed after the opulence of the foyer to the north, is completely empty. There seems to be some sort of message scrawled in the sawdust on the floor.
+The bar, much rougher than you'd have guessed after the opulence
+of the foyer to the north, is completely empty. There seems to be
+some sort of message scrawled in the sawdust on the floor.
 
 >message examine message
 
@@ -204,7 +222,8 @@ The bar, much rougher than you'd have guessed after the opulence of the foyer to
 
 | if (story.message.isTrampled) {
 
-The message has been carelessly trampled, making it difficult to read. You can just distinguish the words...
+The message has been carelessly trampled, making it difficult to
+read. You can just distinguish the words...
 
 !gameover Game Over. You have lost.
 

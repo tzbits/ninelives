@@ -53,6 +53,7 @@ public class Transpiler {
     while (!restLines.isEmpty()) {
       restLines = transpileTopLevel(out, restLines);
     }
+    out.append("game.scope = \"g\";"); // restore scope to global at end of file.
     return out.toString();
   }
 

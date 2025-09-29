@@ -1,37 +1,70 @@
 /* -- game.css -- */
+
+:root {
+    --max-page-width: 580px;
+    --background-color: white;
+    --secondary-background-color: Silver;
+    --text-color: #222;
+    --link-color: blue;
+    --visited-link-color: purple;
+    --border-color: Silver;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background-color: black;
+        --secondary-background-color: #875;
+        --text-color: Silver;
+        --link-color: CornflowerBlue;
+        --visited-link-color: MediumSlateBlue;
+        ---border-color: Silver;
+    }
+}
+
 body {
-    max-width: 580px;
+    /* container */
+    display: block;
+    /* box-sizes */
+    box-sizing: border-box;
+    max-width: var(--max-page-width);
     margin-top: 0px;
     margin-left: auto;
     margin-right: auto;
     padding: 0px;
-    font: normal 20px/24px Garamond, Georgia, serif;
-    color: #222;
-    -webkit-font-smoothing: antialiased;
+
+    /* box-color */
+    background-color: var(--background-color);
+
+    /* text */
+    font: normal 1.3em/1.4em Garamond, Georgia, serif;
+    color: var(--text-color);
+    -webkit-font-smoothing: subpixel-antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
 }
 
 .link {
-    background-color: #FFFFFF;
-    color: black;
-    border: 1px solid #999999;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    border: 2px solid;
+    border-color: var(--border-color);
     border-radius: 10px;
     padding: 5px 15px 3px 15px;
     display: inline-block;
     cursor: pointer;
-    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 3px 10px 0 rgba(0,0,0,0.19);
+    box-shadow: 0 1px 3px 0 var(--border-color), 0 3px 10px 0 rgba(0,0,0,0.19);
     font-size: 80%;
  }
 
 .link:hover {
-    background-color: #875;
-    box-shadow: 0 6px 8px 0 rgba(0,0,0,0.24), 0 8px 25px 0 rgba(0,0,0,0.19);
+    background-color: var(--secondary-background-color);
+    box-shadow: 0 2px 8px 0 var(--border-color), 0 8px 25px 0 rgba(0,0,0,0.19);
 }
 
 div#banner-container {
+    background-color: var(--background-color);
+    z-index: 100;
     position: fixed;
-    background-color: whitesmoke;
     top: 0;
     padding: 8px 0px 0px 0px;
     margin: 0px 0px 0px 0px;
@@ -44,6 +77,7 @@ img#banner {
 }
 
 div#story {
+    z-index: 80;
     margin-top: 215px;
     margin-left: 0.5em;
     margin-right: 0.5em;
@@ -63,24 +97,33 @@ div#story {
 }
 
 .choices {
-   border-top: 1px solid #000;
-   margin-top: 1em;
-   padding-top: 1em;
+   border-top: 0px solid #000;
+   margin-top: 0em;
+   padding-top: 0em;
 }
 
-.choice {
-    margin-top: 2px;
-    margin-bottom: 2px;
+.choices .choice {
+    margin-top: 0px;
+    margin-bottom: 1em;
+    max-width: 20em;
 }
 
 .wrapped-choices {
-    border-top: 1px solid #000;
+    border-top: 0px solid #000;
     margin-top: 1em;
     padding-top: 1em;
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-around;
+}
+
+.wrapped-choices .choice {
+    margin-top: 0px;
+    margin-bottom: 1em;
+    margin-right: 1em;
+    max-width: 20em;
 }
 
 .gameover {

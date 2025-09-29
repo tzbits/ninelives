@@ -15,8 +15,13 @@
 
 (defvar 9l-font-lock-keywords
   (list
-   `(,(rx  line-start "=" (+ (or alnum "_" "-")) "=") . font-lock-function-name-face)
-   `(,(rx line-start ">" (+ (or alnum "_" "-"))) . font-lock-variable-name-face))
+   `(,(rx  line-start "=" (+ (or alnum "_" "-" ":")) "=") . font-lock-function-name-face)
+   `(,(rx line-start ">" (+ (or alnum "_" "-" ":"))) . font-lock-variable-name-face)
+   `(,(rx line-start "!" (+ (or alnum "_" "-"))) . font-lock-function-name-face)
+   ;;`(,(rx line-start "|" (* not-newline)) . font-lock-comment-face)
+   `(,(rx line-start "|" (* not-newline))
+     (0 font-lock-comment-face t))
+   )
   "Keyword highlighting specification for 9L mode.")
 
 (defvar 9l-mode-syntax-table
@@ -30,6 +35,7 @@
   :syntax-table 9l-mode-syntax-table
   (setq-local comment-start "# ")
   (setq-local font-lock-defaults '(9l-font-lock-keywords))
+  (setq-local fill-column 65)
   (visual-line-mode))
 
 (provide '9l-mode)
