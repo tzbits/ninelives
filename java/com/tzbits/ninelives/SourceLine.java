@@ -4,15 +4,23 @@ import com.google.auto.value.AutoValue;
 
 @AutoValue
 public abstract class SourceLine {
+
   public abstract LineType lineType();
+
   public abstract String line();
+
   public abstract int lineNumber();
 
   public static SourceLine newInstance(String line, int lineNumber) {
     if (line.isEmpty()) {
       return new AutoValue_SourceLine(LineType.TEXT, line, lineNumber);
     }
-    if  (line.charAt(0) == '\\') {
+    if (line.charAt(0) == '\\') {
+      return new AutoValue_SourceLine(LineType.TEXT, line.substring(1), lineNumber);
+    }
+    // The node indicator, '=', is a special case, the node id must begin and end with '=',
+    // so we want to treat lines like "== win ? 'happy' : 'sad'} days ahead" as text.
+    if (line.startsWith("=") && !line.matches("^=[^ ]+=.*")) {
       return new AutoValue_SourceLine(LineType.TEXT, line.substring(1), lineNumber);
     }
     return new AutoValue_SourceLine(LineType.forCharacter(line.charAt(0)), line, lineNumber);

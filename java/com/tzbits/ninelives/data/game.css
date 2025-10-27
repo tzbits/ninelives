@@ -1,19 +1,24 @@
 /* -- game.css -- */
 
 :root {
-    --max-page-width: 580px;
+  --max-page-width: 580px;
+}
+
+@media (prefers-color-scheme: light) or (prefers-color-scheme: no-preference) {
+  :root {
     --background-color: white;
     --secondary-background-color: Silver;
     --text-color: #222;
     --link-color: blue;
     --visited-link-color: purple;
     --border-color: Silver;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
     :root {
         --background-color: black;
-        --secondary-background-color: #875;
+        --secondary-background-color: #736548;
         --text-color: Silver;
         --link-color: CornflowerBlue;
         --visited-link-color: MediumSlateBlue;
@@ -45,21 +50,21 @@ body {
 
 .link {
     background-color: var(--background-color);
-    color: var(--text-color);
-    border: 2px solid;
+    color: var(--link-color);
+    border: 0px solid;
     border-color: var(--border-color);
     border-radius: 10px;
     padding: 5px 15px 3px 15px;
     display: inline-block;
     cursor: pointer;
-    box-shadow: 0 1px 3px 0 var(--border-color), 0 3px 10px 0 rgba(0,0,0,0.19);
+    /*box-shadow: 0 1px 3px 0 var(--border-color), 0 3px 10px 0 rgba(0,0,0,0.19);*/
     font-size: 80%;
  }
 
-.link:hover {
-    background-color: var(--secondary-background-color);
-    box-shadow: 0 2px 8px 0 var(--border-color), 0 8px 25px 0 rgba(0,0,0,0.19);
-}
+/*.link:hover {*/
+/*    background-color: var(--secondary-background-color);*/
+/*    box-shadow: 0 2px 8px 0 var(--border-color), 0 8px 25px 0 rgba(0,0,0,0.19);*/
+/*}*/
 
 div#banner-container {
     background-color: var(--background-color);
@@ -82,6 +87,16 @@ div#story {
     margin-left: 0.5em;
     margin-right: 0.5em;
     margin-bottom: calc(100vh);
+}
+
+.StoryElt {
+  transition: opacity 0.5s ease-out;
+  opacity: 1;
+  margin-bottom: 2em;
+}
+
+.StoryElt.hidden {
+  opacity: 0;
 }
 
 .StoryElt p:first-child {
@@ -110,8 +125,7 @@ div#story {
 
 .wrapped-choices {
     border-top: 0px solid #000;
-    margin-top: 1em;
-    padding-top: 1em;
+    margin-top: 2em;
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;

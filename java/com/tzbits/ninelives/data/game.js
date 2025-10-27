@@ -1,6 +1,8 @@
 // game.js
 
 class GameView {
+  story;
+  storyElt;
   constructor() {
     /** The outer div element where each new StoryElt gets appended. */
     this.story = document.getElementById('story');
@@ -15,18 +17,22 @@ class GameView {
   startStoryElt(timeStep) {
     this.storyElt = this.newStoryElt(timeStep)
     this.story.append(this.storyElt)
+
+    // 1. FORCE REFLOW: Reading any layout property forces the browser
+    // to calculate and render the initial 'hidden' state (opacity: 0).
+    // Without this, the browser skips the transition.
+    this.storyElt.offsetHeight;
+    // 2. TRIGGER TRANSITION: Now remove the class to trigger the fade.
+    this.storyElt.classList.remove('hidden');
   }
 
   newStoryElt(timeStep) {
     const eltId = `t${timeStep}`
     const ret = document.createElement('div')
     ret.classList.add('StoryElt')
+    ret.classList.add('hidden')
     ret.setAttribute('id', eltId)
     return ret
-  }
-
-  finishStoryElt() {
-    this.scrollToElt(this.storyElt)
   }
 
   /** Scrolls to the HTML element, `storyElt`. */
@@ -59,6 +65,11 @@ class GameView {
     return styleCode;
   }
 
+  /**
+   * Appends 'choices' to 'gameView.storyElt'.
+   * @param {Game} game
+   * @param {Choice[]} choices
+   */
   displayChoices(game, choices) {
     const gameView = this
     const choicesElt = document.createElement("div")
@@ -91,7 +102,7 @@ class GameView {
   }
 
   removeChoices() {
-    var element = document.querySelector('.choices');
+    const element = document.querySelector('.choices');
     if (element) {
       element.parentNode.removeChild(element);
     }
@@ -106,15 +117,20 @@ class GameView {
 }
 
 export class AbstractGameNode {
+  /** @type {string} */
+  nodeId;
+  /** @type {function(Game, Choice): void} */
+  execFn;
+  location = "none";
+  label = "GameNode_undefined";
   constructor(nodeId) {
     this.nodeId = nodeId
-    this.location = "none"
-    this.label = "GameNode_undefined"
-    this.execFn = function(game, choice) {
-      game.say(
-        `Executing choice but the gameNode exec method for "${choice.nodeId}"`
-          + ` is not implemented. Choice text was: "${choice.txt}".`)
-    }
+    this.execFn =
+        function(game, choice) {
+          game.say(
+              `Executing choice but the gameNode exec method for "${choice.nodeId}"`
+              + ` is not implemented. Choice text was: "${choice.txt}".`)
+        }
   }
 
   exec(game, choice) { return this.execFn(game, choice) }
@@ -135,7 +151,7 @@ export class AbstractGameNode {
   }
 
   firstVisit() {
-    return game.nodeVisits[this.nodeId] == 1;
+    return game.nodeVisits[this.nodeId] === 1;
   }
 
   enteredFrom(...ids) {
@@ -147,12 +163,18 @@ export class AbstractGameNode {
   }
 }
 
+/**
+ * * @extends {AbstractGameNode}
+ */
 export class GameNode extends AbstractGameNode {
   constructor(nodeId) {
     super(nodeId)
   }
 }
 
+/**
+ * @extends {AbstractGameNode}
+ */
 class Player extends AbstractGameNode {
   constructor() {
     super("g:player")
@@ -162,6 +184,9 @@ class Player extends AbstractGameNode {
   }
 }
 
+/**
+ * * @extends {AbstractGameNode}
+ */
 export class GameItem extends AbstractGameNode {
   constructor(nodeId, label, location) {
     super(nodeId)
@@ -171,6 +196,11 @@ export class GameItem extends AbstractGameNode {
 }
 
 class Choice {
+  /** @type {string} */
+  nodeId;
+  /** @type {string} */
+  txt;
+  data = [];
   constructor(toNodeId, txt, data=[]) {
     this.nodeId = toNodeId;
     this.txt = txt;
@@ -179,67 +209,74 @@ class Choice {
 }
 
 class Game {
+  /**
+   * Node handlers indexed by node id.
+   * @type {Record<string, AbstractGameNode>}
+   */
+  gameNodes;
+  /** @type {Player} */
+  player = new Player();
+
+  gameView = new GameView()
+
+  /** current scope for functions that use unqualified node ids. */
+  scope = "g";  // g for global scope
+
+  /** Key that game state is stored under. */
+  gameDataKey = "";
+
+  /** Game state that can be updated by game nodes. */
+  state = {};
+
+  /** Whether to randomize the order of choices. Defaults to true. */
+  useRandomChoiceOrder = true;
+
+  /**
+   * Whether to put the choices on a wrapping horizontal vs listing
+   * them vertically.
+   */
+  wrapChoices = true;
+
+  /** Includes debug info when clicking through the game. */
+  enableDebug = false
+  debugVerbosity = 0;
+
+  /** Set this function to run on load and take control of stepping through a path in the story. */
+  debugOnLoadFn = null
+
+  /**
+   * The current time, a strictly increasing int.
+   * @private {number}
+   */
+  timeStep = 0
+
+  /**
+   * The node id that was last run.
+   * '' is the starting state before any nodes have run. First node is '=0='.
+   * @private {string}
+   */
+  atNodeId = ''
+
+  /** Node ids are added to this array as they are stepped into. */
+  gamePath = []
+
+  /**
+   * The count of visits to particular nodes, keyed by node id.
+   * @type {Record<string, number>}
+   */
+  nodeVisits = {}
+
+  /** Place to hold game items. */
+  items = {}
+
   constructor() {
-    /** current scope for functions that use unqualified node ids. */
-    this.scope = "g";  // g for global scope
+    this.gameNodes = { '=g:player=': /** @type {AbstractGameNode} */ this.player }
+  }
 
-    /** Key that game state is stored under. */
-    this.gameDataKey = "";
-
-    /** Game state that can be updated by game nodes. */
-    this.state = {};
-
-    /** Whether to randomize the order of choices. Defaults to true. */
-    this.useRandomChoiceOrder = true;
-
-    /**
-     * Whether to put the choices on a wrapping horizontal vs listing
-     * them vertically.
-     */
-    this.wrapChoices = true;
-
-    /** Includes debug info when clicking through the game. */
-    this.enableDebug = false
-    this.debugVerbosity = 0;
-
-    /** Set this function to run on load and take control of stepping through a path in the story. */
-    this.debugOnLoadFn = null
-
-    this.gameView = new GameView()
-
-    const thePlayer = new Player()
-    this.player = thePlayer
-
-    /**
-     * Node handlers indexed by node id.
-     * @private {Object<string, Function>}
-     */
-    this.gameNodes = { '=g:player=': thePlayer }
-
-    /**
-     * The current time, a strictly increasing int.
-     * @private {number}
-     */
-    this.timeStep = 0
-
-    /**
-     * The node id that was last run.
-     * '' is the starting state before any nodes have run. First node is '=0='.
-     * @private {string}
-     */
-    this.atNodeId = ''
-
-    /** Node ids are added to this array as they are stepped into. */
-    this.gamePath = []
-
-    /**
-     * The count of visits to particular nodes, keyed by node id.
-     * @private {Object<string, number>}
-     */
-    this.nodeVisits = {}
-
-    /** Place to hold game items. */
-    this.items = {}
+  reset() {
+    this.nodeVisits = {};
+    this.gamePath = [];
+    this.timeStep = 0;
   }
 
   resolveScope(id) {
@@ -279,6 +316,7 @@ class Game {
 
   /**
    * Move one step forward in time and call the game node for `toNodeId`.
+   * @param {Choice} choice
    */
   step(choice) {
     if (this.enableDebug) {
@@ -299,10 +337,10 @@ class Game {
     if (!(this.atNodeId in this.gameNodes)) {
       throw `The node ${this.atNodeId} was not found by game.step`
     }
-    // TODO: how to get choice args here?
-    this.gameNodes[this.atNodeId].exec(this, choice)
 
-    this.gameView.finishStoryElt()
+    // @type {AbstractGameNode}
+    const nd = this.gameNodes[this.atNodeId];
+    nd.exec(this, choice)
   }
 
   getNode(id) {
@@ -353,6 +391,9 @@ class Game {
     }
   }
 
+  /**
+   * @param {Choice} choice
+   */
   outputDebugInfo(choice) {
     if (this.debugVerbosity > 0) {
       const elt = document.createElement('pre')
@@ -396,7 +437,7 @@ class Game {
     let choices = []
     for (let key in game.gameNodes) {
       const item = game.gameNodes[key]
-      if (item instanceof GameItem && item.location == "=g:player=") {
+      if (item instanceof GameItem && item.location === "=g:player=") {
         choices.push(game.choice(item.nodeId, item.label))
       }
     }
@@ -406,7 +447,7 @@ class Game {
 }
 export const game = new Game();
 
-window.addEventListener('beforeunload', function (event) {
+window.addEventListener('beforeunload', function (ignoreEvent) {
   game.saveState();
 });
 
