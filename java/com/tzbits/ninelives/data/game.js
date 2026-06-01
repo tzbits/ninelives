@@ -1,57 +1,67 @@
 // game.js
+// noinspection JSUnusedGlobalSymbols
 
+/**
+ * View class for text games.
+ */
 class GameView {
+  /**
+   * @type {HTMLDivElement}
+   * @description The outer div element where each new StoryElt gets appended.
+   */
   story;
+  /**
+   * @type {HTMLDivElement|null}
+   * @description An "offscreen" buffer, created by startStoryElt.
+   */
   storyElt;
-  constructor() {
-    /** The outer div element where each new StoryElt gets appended. */
-    this.story = document.getElementById('story');
 
-    /**
-     * The current output element, created by startStoryElt.
-     * @private {HTMLDivElement}
-     */
+  constructor() {
+    this.story = document.getElementById('story');
     this.storyElt = null;
   }
 
+  /**
+   * Creates a new {@link storyElt} and appends it to {@link story}.
+   */
   startStoryElt(timeStep) {
-    this.storyElt = this.newStoryElt(timeStep)
-    this.story.append(this.storyElt)
+    const eltId = `t${timeStep}`
+    const elt = document.createElement('div')
+    elt.setAttribute('id', eltId)
+    elt.classList.add('StoryElt', 'hidden')
+    this.storyElt = elt;
+  }
 
-    // 1. FORCE REFLOW: Reading any layout property forces the browser
-    // to calculate and render the initial 'hidden' state (opacity: 0).
-    // Without this, the browser skips the transition.
+  /**
+   * Clears {@link story} and appends {@link storyElt}.
+   */
+  showStoryElt() {
+    this.story.innerHTML = "";
+    window.scrollTo(0, 0);
+    this.story.append(this.storyElt);
+    // Reading a layout property here to force the browser to calculate and
+    // render the initial 'hidden' state (opacity: 0) after appending.
+    // Without this, the browser jump-cuts the fade-in transition.
     this.storyElt.offsetHeight;
-    // 2. TRIGGER TRANSITION: Now remove the class to trigger the fade.
     this.storyElt.classList.remove('hidden');
   }
 
-  newStoryElt(timeStep) {
-    const eltId = `t${timeStep}`
-    const ret = document.createElement('div')
-    ret.classList.add('StoryElt')
-    ret.classList.add('hidden')
-    ret.setAttribute('id', eltId)
-    return ret
-  }
-
-  /** Scrolls to the HTML element, `storyElt`. */
-  scrollToElt(storyElt) {
-    const bannerAdjust = parseInt(window.getComputedStyle(this.story).marginTop, 10);
-    const offsetBottom = storyElt.offsetTop + storyElt.offsetHeight
-    window.scrollTo({
-      top: storyElt.offsetTop - bannerAdjust, left: 0, behavior: 'smooth'
-    })
-  }
-
+  /** Append a paragraph of text to {@link storyElt}. */
   say(txt) {
     this.storyElt.innerHTML += `<p>${txt}</p>`
   }
 
-  sayWith(styleCode, txt) {
-    this.storyElt.innerHTML += `<p class='${this.codeToStyle(styleCode)}'>${txt}</p>`
+  /**
+   * Append a paragraph of text to {@link storyElt} with a style.
+   * @param {string} styleCode
+   * @param {string} text
+   */
+  sayWith(styleCode, text) {
+    this.storyElt.innerHTML += `<p class='${this.codeToStyle(
+        styleCode)}'>${text}</p>`
   }
 
+  /** @param {string} styleCode */
   codeToStyle(styleCode) {
     if (styleCode === 'c') {
       return 'center';
@@ -66,7 +76,7 @@ class GameView {
   }
 
   /**
-   * Appends 'choices' to 'gameView.storyElt'.
+   * Appends 'choices' to {@link storyElt}.
    * @param {Game} game
    * @param {Choice[]} choices
    */
@@ -81,7 +91,9 @@ class GameView {
       })
     }
     for (const choice of choices) {
-      if (!choice || !choice.nodeId) { continue }
+      if (!choice || !choice.nodeId) {
+        continue
+      }
       const choiceElt = document.createElement("div")
       choiceElt.classList.add('choice')
       const linkElt = document.createElement("span")
@@ -101,6 +113,9 @@ class GameView {
     gameView.storyElt.append(choicesElt)
   }
 
+  /**
+   * Removes any html element with the class, "choices", from the document.
+   */
   removeChoices() {
     const element = document.querySelector('.choices');
     if (element) {
@@ -108,6 +123,7 @@ class GameView {
     }
   }
 
+  /** Changes the src image of the image element with the id, 'banner'. */
   img(url) {
     let bannerElt = document.getElementById('banner');
     if (bannerElt !== null) {
@@ -123,17 +139,20 @@ export class AbstractGameNode {
   execFn;
   location = "none";
   label = "GameNode_undefined";
+
   constructor(nodeId) {
     this.nodeId = nodeId
     this.execFn =
-        function(game, choice) {
+        function (game, choice) {
           game.say(
               `Executing choice but the gameNode exec method for "${choice.nodeId}"`
               + ` is not implemented. Choice text was: "${choice.txt}".`)
         }
   }
 
-  exec(game, choice) { return this.execFn(game, choice) }
+  exec(game, choice) {
+    return this.execFn(game, choice)
+  }
 
   setExecFn(execFn) {
     this.execFn = execFn
@@ -201,7 +220,8 @@ class Choice {
   /** @type {string} */
   txt;
   data = [];
-  constructor(toNodeId, txt, data=[]) {
+
+  constructor(toNodeId, txt, data = []) {
     this.nodeId = toNodeId;
     this.txt = txt;
     this.data = data;
@@ -270,7 +290,7 @@ class Game {
   items = {}
 
   constructor() {
-    this.gameNodes = { '=g:player=': /** @type {AbstractGameNode} */ this.player }
+    this.gameNodes = {'=g:player=': /** @type {AbstractGameNode} */ this.player}
   }
 
   reset() {
@@ -300,7 +320,8 @@ class Game {
       if (typeof retrievedState === "object" && retrievedState !== null) {
         this.state = retrievedState;
       } else {
-        throw `Failed to parse game state from "${retrievedString}"`;
+        console.log(`Failed to parse game state from "${retrievedString}"`);
+        this.state = {};
       }
     } catch (err) {
       console.log(`Error loading game state from (${retrievedString}): ${err}.`)
@@ -340,7 +361,8 @@ class Game {
 
     // @type {AbstractGameNode}
     const nd = this.gameNodes[this.atNodeId];
-    nd.exec(this, choice)
+    nd.exec(this, choice);
+    this.gameView.showStoryElt();
   }
 
   getNode(id) {
@@ -348,8 +370,9 @@ class Game {
   }
 
   /**
-   * Returns the nodeId set that `step` is running. This is meant to be referred to
-   * from other downstream methods called within the nodes's exec method.
+   * Returns the nodeId set that `step` is running. This is meant to be
+   * referred to * from other downstream methods called within the node's
+   * exec method.
    */
   currentNode() {
     return this.atNodeId
@@ -414,7 +437,7 @@ class Game {
     this.gameView.sayWith(styleCode, txt)
   }
 
-  choice(nodeId, txt, data=[]) {
+  choice(nodeId, txt, data = []) {
     return new Choice(this.resolveScope(nodeId), txt, data)
   }
 
@@ -445,11 +468,9 @@ class Game {
     game.chooseFrom(choices)
   }
 }
-export const game = new Game();
 
-window.addEventListener('beforeunload', function (ignoreEvent) {
-  game.saveState();
-});
+export const game = new Game();
+window.game = game;
 
 export function visited(nodeId) {
   return game.isVisited(nodeId)
@@ -458,3 +479,10 @@ export function visited(nodeId) {
 export function back() {
   game.choose(game.choice(game.priorNode(), '< back'));
 }
+
+// Makes it so refreshing the window resets the scroll position.
+window.addEventListener('load', () => { history.scrollRestoration = 'manual' });
+
+window.addEventListener('beforeunload', function (ignoreEvent) {
+  game.saveState();
+});

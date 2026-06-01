@@ -1,3 +1,5 @@
+load("@rules_java//java:defs.bzl", "java_test")
+
 java_test(
     name = "TranspilerTest",
     srcs = ["TranspilerTest.java"],
@@ -5,7 +7,7 @@ java_test(
         "//java/com/tzbits/ninelives",
         "//third_party:junit",
         "//third_party:truth",
-    ]
+    ],
 )
 
 java_test(
@@ -15,5 +17,5 @@ java_test(
         "//java/com/tzbits/ninelives",
         "//third_party:junit",
         "//third_party:truth",
-    ]
+    ],
 )
