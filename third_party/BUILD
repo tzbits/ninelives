@@ -1,3 +1,6 @@
+load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
+load("@rules_java//java:defs.bzl", "java_binary", "java_library")
+
 package_group(
     name = "tzbits_pkgs",
     packages = [
