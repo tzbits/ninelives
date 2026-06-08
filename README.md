@@ -6,7 +6,7 @@ Nine lives is a Javascript dsl for creating choice-based interactive fiction.
 
 Here are the specific versions known to work. They are based on Ubuntu 24.04 LTS defaults.
 
-bazel 8.3.1 - https://bazel.build/install
+bazel 9.1.0 - https://bazel.build/install
 
   * Use [bazelisk](https://github.com/bazelbuild/bazelisk/releases) to install on Ubuntu.
 
@@ -14,7 +14,7 @@ Java [JDK 21](https://openjdk.org/projects/jdk/21/)
 
   * `sudo apt install openjdk-21-jdk` on Ubuntu.
 
-Python 3.12.3
+Python 3.13.13
 
 # Usage
 
