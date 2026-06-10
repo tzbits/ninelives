@@ -2,8 +2,6 @@
 
 ## Overview
 
-Duration: 2:00
-
 Nine Lives is a Javascript DSL for creating choice-based interactive fiction. Before you can start crafting your own stories, you need to set up the development environment on your local machine.
 
 In this guide, we will walk through the process of installing the necessary dependencies and verifying that you can build and run Nine Lives stories.
@@ -22,7 +20,7 @@ In this guide, we will walk through the process of installing the necessary depe
 
 ## Install dependencies
 
-Duration: 5:00
+Duration: 1:00
 
 To build and run Nine Lives, we need a few specific tools. These instructions are based on Ubuntu 26.04 LTS defaults.
 
@@ -45,7 +43,7 @@ For Bazel, we recommend using **Bazelisk**, which automatically manages Bazel ve
 
 ## Clone the repository
 
-Duration: 2:00
+Duration: 1:00
 
 Now, we need to get the source code. Clone the Nine Lives repository from GitHub:
 
@@ -60,7 +58,7 @@ Change directory to the root of the repository:
 
 ## Verify build rules
 
-Duration: 2:00
+Duration: 1:00
 
 Once inside the repository, we can use Bazel to inspect the available build rules. This confirms that Bazel is correctly configured and can see the project structure.
 
@@ -72,7 +70,7 @@ You should see a list of targets starting with `//9l/...`, `//java/...`, and oth
 
 ## Run a story locally
 
-Duration: 3:00
+Duration: 5:00
 
 The ultimate test of our installation is running a story server. We'll use "Cloak of Darkness" (`//9l/cloak`) as our test case.
 
@@ -89,8 +87,6 @@ Now, open your web browser and visit `http://localhost:8080`. You should be able
 To stop the server, press `Ctrl+C` in your terminal.
 
 ## That's all folks!
-
-Duration: 1:00
 
 Congratulations! You have successfully set up the Nine Lives compiler environment and run your first story locally.
 

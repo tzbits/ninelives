@@ -243,7 +243,7 @@ public class TranspilerTest {
   }
 
   @Test
-  public void transpile_textWithBacktickIsEscaped() {
+  public void transpile_textWithBacktickIsNOTEscaped() {
     String src =
             """
                     =d50= It's happening!
@@ -255,7 +255,7 @@ public class TranspilerTest {
         .isEqualTo(
             imports +
             nodePreamble("=d50= It's happening!", "=g:d50=") +
-            "game.say(`A \\`backtick\\` but ${ok} stays.`);\n" +
+            "game.say(`A `backtick` but ${ok} stays.`);\n" +
             nodeEnd +
             trailer);
   }

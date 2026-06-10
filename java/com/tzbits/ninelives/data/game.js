@@ -246,30 +246,11 @@ class Game {
   gameDataKey = "";
 
   /**
-   * Ordered list of chapter keys, e.g. ["ch0","ch1",...,"ch9"].
-   * Set once at game init before calling startChapter().
-   * @type {string[]}
-   */
-  chapterOrder = [];
-
-  /** The key of the currently active chapter. */
-  currentChapterKey = null;
-
-  /**
-   * All chapter states keyed by chapter key.
+   * All game states.
    * Persisted to localStorage as one blob.
-   * @type {Record<string, object>}
+   * @type {object}
    */
-  _allChapterState = {};
-
-  /**
-   * game.state routes reads/writes into the current chapter's sub-object.
-   * All existing .9l code like `game.state.financial_backer = "Smith"` works unchanged.
-   */
-  get state() {
-    if (!this.currentChapterKey) return {};
-    return this._allChapterState[this.currentChapterKey] ??= {};
-  }
+  state = {};
 
   /** Whether to randomize the order of choices. Defaults to true. */
   useRandomChoiceOrder = true;
@@ -340,7 +321,7 @@ class Game {
       const raw = localStorage.getItem(gameDataKey);
       const parsed = JSON.parse(raw);
       if (parsed && typeof parsed === "object") {
-        this._allChapterState = parsed;
+        this.state = parsed;
       }
     } catch (e) {
       console.log(`Could not load state for ${gameDataKey}: ${e}`);
@@ -348,26 +329,12 @@ class Game {
   }
 
   saveState() {
-    if (this.gameDataKey) {
-      localStorage.setItem(this.gameDataKey, JSON.stringify(this._allChapterState));
+    if (this.gameDataKey && this.gameDataKey != "") {
+      localStorage.setItem(this.gameDataKey, JSON.stringify(this.state));
+    } else {
+      throw Error(
+          `No gameDataKey set for game.saveState(). Try starting your game with game.loadState("MyGameDataKey");`)
     }
-  }
-
-  /**
-   * Call at the first node of each chapter.
-   * Resets state for this chapter and all subsequent chapters, then saves.
-   * @param {string} chapterKey  e.g. "ch6"
-   */
-  startChapter(chapterKey) {
-    this.currentChapterKey = chapterKey;
-    const idx = this.chapterOrder.indexOf(chapterKey);
-    if (idx !== -1) {
-      for (let i = idx; i < this.chapterOrder.length; i++) {
-        delete this._allChapterState[this.chapterOrder[i]];
-      }
-    }
-    this._allChapterState[chapterKey] = {};
-    this.saveState();
   }
 
   /**
@@ -398,7 +365,6 @@ class Game {
     const nd = this.gameNodes[this.atNodeId];
     nd.exec(this, choice);
     this.gameView.showStoryElt();
-    this.saveState();
   }
 
   getNode(id) {

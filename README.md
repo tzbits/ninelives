@@ -33,9 +33,14 @@ To release the project into a tar file:
 
 # TODO
 
-Ways to help
+* we need reconcile `story` state with `game.state`
 
-* Document the dsl
+* ! defaults to adding to adding the css class to the following text
+  * we should make that an explicit command:
+
+        !css funky Now this senetence is funky looking.
+
+  * actually, we should make it so you can plug in custom functions for ! in JavaScript
 * make a better way to list vs wrap choices
 * consider adding a less cryptic conditional choice format:
   * >some-node-id !if isThisTrue(foo) !then "go happily"

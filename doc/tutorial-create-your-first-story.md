@@ -2,8 +2,6 @@
 
 ## Overview
 
-Duration: 01:00
-
 In this guide, we will create a simple branching narrative using the basic Nine Lives (9l) syntax. We'll build an abbreviated version of the "Cat and Mouse" story to understand how choices and nodes work together to form a game.
 
 ### What you’ll learn
@@ -19,20 +17,36 @@ In this guide, we will create a simple branching narrative using the basic Nine 
 - A text editor (like VS Code, Sublime, or even Notepad)
 - The Nine Lives compiler installed (see [Install the Nine Lives compiler](guide-install-nine-lives-compiler.md))
 
-## 1. Basic Syntax
-
-Duration: 00:30
+## Basic Syntax
 
 The 9l format uses a few simple markers that we'll use throughout this guide:
 - `=id=`: Defines a **Node**. This is a specific point in our story.
 - `>`: Defines a **Choice**. This links to another node.
 - `Text`: Anything else is treated as story text shown to the player.
 
-## 2. Step 1: The Beginning
+## Step 1: Setting up your project
 
 Duration: 02:00
 
-Every story needs a starting point. By convention, we usually start with node `0`. Let's create our first node:
+Before we start writing our story, let's create a place for it to live.
+
+First, create a directory for your story inside the `9l` directory. Let's call it `my-story`:
+
+```bash
+mkdir 9l/my-story
+```
+
+Next, create an empty file named `mycatstory.9l` inside that directory. You will be typing your story into this file as we go along.
+
+```bash
+touch 9l/my-story/mycatstory.9l
+```
+
+## Step 2: The Beginning
+
+Duration: 01:00
+
+Every story needs a starting point. By convention, we usually start with node `0`. Open `9l/my-story/mycatstory.9l` in your editor and add our first node:
 
 ```9l
 =0=
@@ -48,11 +62,11 @@ In this snippet:
 2. The text describes the situation to the player.
 3. `>1` and `>2` create buttons that the player can click to go to nodes `1` or `2`.
 
-## 3. Step 2: Adding a "Game Over"
+## Step 3: Adding a "Game Over"
 
-Duration: 02:00
+Duration: 01:00
 
-If the player chooses to sniff behind the bookshelf, they might run into trouble. We use the `!gameover` command to signify an ending.
+If the player chooses to sniff behind the bookshelf, they might run into trouble. We use the `!gameover` command to signify an ending. Add this to your file:
 
 ```9l
 =1=
@@ -67,11 +81,11 @@ Snap! A mouse trap crushes your nose.
 
 Here, `!gameover` is a special command that formats the game over message consistently. It is only for formatting and doesn't have any effect on the game logic. We provide a choice `>0` to let the player restart from the beginning.
 
-## 4. Step 3: Branching the Narrative
+## Step 4: Branching the Narrative
 
-Duration: 02:00
+Duration: 01:00
 
-Now let's handle the other choice from the start: meowing. This creates a branch where the story continues instead of ending.
+Now let's handle the other choice from the start: meowing. This creates a branch where the story continues instead of ending. Add the following to your file:
 
 ```9l
 =2=
@@ -82,11 +96,11 @@ You meow loudly. Your owner comes over and pets you.
 >3 Purr when she pets you.
 ```
 
-## 5. Step 4: Reaching a Conclusion
+## Step 5: Reaching a Conclusion
 
-Duration: 02:00
+Duration: 01:00
 
-If the player purrs, they get a reward. We'll wrap up this short adventure with a "Win" state.
+If the player purrs, they get a reward. We'll wrap up this short adventure with a "Win" state. Add node `3` to your file:
 
 ```9l
 =3=
@@ -107,80 +121,27 @@ And finally, the conclusion in node `4`:
 You chase the mouse around the house. You catch it!
 
 !c You've realized your potential as a cat.
-!c You Win!
+!gameover You Win!
 ```
 
-The `!c` command centers the text on the screen, highlighting the victory.
+The `!c` command centers the text on the screen, highlighting the remark on your victory.
 
-## 6. Step 5: Setting up your project
+## Step 6: Creating the BUILD file
 
-Duration: 05:00
+Duration: 01:00
 
 Now that we have our story, we need to tell the Nine Lives compiler how to build it. Bazel uses `BUILD` files for this purpose.
 
-First, create a directory for your story inside the `9l` directory. Let's call it `my-story`:
+Create a `BUILD` file in the same directory (`9l/my-story/BUILD`). This file tells Bazel to use the `ninelives_story` rule to compile your story.
 
-```bash
-mkdir 9l/my-story
-```
-
-Next, save all the code snippets we wrote above into a file named `story.9l` inside that directory. Your file should look like this:
-
-```9l
-=0=
-
-Something behind the book shelf smells like cheese.
-
->1 Sniff behind the book shelf.
->2 Meow loudly.
-
-=1=
-
-You poke your nose behind the book shelf and sniff. 
-Snap! A mouse trap crushes your nose.
-
-!gameover Good thing you have 9 lives.
-
->0 Try Again
-
-=2=
-
-You meow loudly. Your owner comes over and pets you.
-"Aww, what's the matter?" she asks.
-
->3 Purr when she pets you.
-
-=3=
-
-She reaches toward you to pet you on the head. You lean in and purr.
-"Aww, so sweet," she says. "Do you want some cheese?"
-
-Just then, a mouse runs by.
-
->4 Chase mouse.
-
-=4=
-
-You chase the mouse around the house. You catch it!
-
-!c You've realized your potential as a cat.
-!c You Win!
-```
-
-## 7. Step 6: Creating the BUILD file
-
-Duration: 05:00
-
-Now, we need to create a `BUILD` file in the same directory (`9l/my-story/BUILD`). This file tells Bazel to use the `ninelives_story` rule to compile your story.
-
-Create a file named `BUILD` and add the following content:
+Add the following content to your `BUILD` file:
 
 ```python
 load("//java/com/tzbits/ninelives:rules.bzl", "ninelives_story")
 
 ninelives_story(
     name = "my_story",
-    srcs = ["story.9l"],
+    srcs = ["mycatstory.9l"],
     static = [],
 )
 ```
@@ -189,12 +150,12 @@ In this file:
 1. `load(...)` imports the Nine Lives build rules.
 2. `ninelives_story(...)` defines a new story target.
 3. `name = "my_story"` is the name of your target (you'll use this to run it).
-4. `srcs = ["story.9l"]` tells Bazel which story files to include.
+4. `srcs = ["mycatstory.9l"]` tells Bazel which story files to include.
 5. `static = []` is for static assets like images. Since we don't have any yet, we leave it as an empty list.
 
-## 8. Step 7: Running your story
+## Step 7: Running your story
 
-Duration: 05:00
+Duration: 02:00
 
 With the `BUILD` file in place, you can now run your story using Bazel!
 
@@ -210,9 +171,7 @@ Open your browser and navigate to `http://localhost:8080` to play your new story
 
 To stop the server, press `Ctrl+C` in your terminal.
 
-## 9. That's all folks!
-
-Duration: 01:00
+## That's all folks!
 
 Congrats, you made it! You've gone from a blank page to a playable branching narrative. You now know how to:
 
