@@ -34,9 +34,9 @@ You chew on the electric wire, and while dangerous, it doesn't
 kill you. You don't even choke on the plastic bits. It's your
 lucky day.
 
-!c Something else must have killed you.
-
 !gameover Game Over.
+
+!c Something else must have killed you.
 
 >12 Try Again
 
@@ -54,9 +54,9 @@ left. You scurry right. It's chaos.
 You scurry along the wall toward the door. Someone opens it. You
 escape safely outside.
 
-!c Something else must have killed you.
+!gameover Game Over.
 
-!gameover
+!c Something else must have killed you.
 
 >14 Try Again
 
@@ -75,7 +75,7 @@ not to eat it. It's your lucky day, the mouse trap doesn't go off.
 
 !gameover Game Over.
 
-!center Something else must have killed you.
+!c Something else must have killed you.
 
 >16 Try Again
 
@@ -87,11 +87,11 @@ a cat here!
 The cat catches you, bats you around a bit, and makes you think
 you are going to be set free. Then the cat bites you in the neck.
 
-!center You Win!
+!gameover You Win!
 
 You've successfully recalled how your life ended as a mouse. With this
 new-found knowledge you transcend your violent existence as a cat.
 
-!center You are now a vegetarian.
+!c You are now a vegetarian.
 
-!gameover Happy foraging!
+!c Happy foraging!

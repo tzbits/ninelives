@@ -1,13 +1,14 @@
 /* -- game.css -- */
 
 :root {
-  --max-page-width: 580px;
+  --max-page-width: 600px;
 }
+
+/* aliceblue, antiquewhite, whitesmoke, ghostwhite */
 
 @media (prefers-color-scheme: light) or (prefers-color-scheme: no-preference) {
   :root {
-    --background-color: white;
-    --secondary-background-color: Silver;
+    --background-color: aliceblue;
     --text-color: #222;
     --link-color: blue;
     --visited-link-color: purple;
@@ -18,9 +19,8 @@
 @media (prefers-color-scheme: dark) {
     :root {
         --background-color: black;
-        --secondary-background-color: #736548;
-        --text-color: Silver;
-        --link-color: CornflowerBlue;
+        --text-color: silver;
+        --link-color: steelblue; /* coral */
         --visited-link-color: MediumSlateBlue;
         ---border-color: Silver;
     }
@@ -61,11 +61,6 @@ body {
     font-size: 80%;
  }
 
-/*.link:hover {*/
-/*    background-color: var(--secondary-background-color);*/
-/*    box-shadow: 0 2px 8px 0 var(--border-color), 0 8px 25px 0 rgba(0,0,0,0.19);*/
-/*}*/
-
 div#banner-container {
     background-color: var(--background-color);
     z-index: 100;
@@ -76,14 +71,14 @@ div#banner-container {
 }
 
 img#banner {
-    max-width: 580px;
-    max-height: 195px;
+    max-width: 600px;
+    max-height: 200px;
     border-radius: 15px;
 }
 
 div#story {
     z-index: 80;
-    margin-top: 215px;
+    margin-top: 230px;
     margin-left: 0.5em;
     margin-right: 0.5em;
     margin-bottom: calc(100vh);
@@ -125,7 +120,7 @@ div#story {
 
 .wrapped-choices {
     border-top: 0px solid #000;
-    margin-top: 2em;
+    margin-top: 0.5em;
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
@@ -141,20 +136,20 @@ div#story {
 }
 
 .gameover {
-    border-bottom: 1px solid #000;
+    border-bottom: 1px solid var(--text-color);
 }
 
-@media only screen and (max-width: 580px) {
+@media only screen and (max-width: 600px) {
     div#banner-container {
         padding: 0px 0px 0px 0px;
     }
     img#banner {
         max-width: 100%;
-        max-height: calc(100% * 0.33620);
+        max-height: calc(100% / 3.0);
         border-radius: 0;
     }
     div#story {
-        margin-top: calc(100vw * 0.33620 + 20px);
+        margin-top: calc((100vw / 3.0) + 15px);
         margin-left: 1em;
         margin-right: 1em;
         margin-bottom: calc(100vh)

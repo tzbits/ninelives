@@ -15,7 +15,9 @@ your head doesn't fit.
 
 Snap! A mouse trap crushes your nose. You can't breath.
 
-!gameover Good thing you have 9 lives.
+!gameover Game Over.
+
+!c Good thing you have 9 lives.
 
 >0 Try Again
 
@@ -38,7 +40,9 @@ She screams and kicks you. Then she picks you up and throws you
 outside. Injured from the kick, you are not able to run away when
 night falls and the hungry coyotes approach you.
 
-!gameover Good thing you have 9 lives.
+!gameover Game Over.
+
+!c Good thing you have 9 lives.
 
 >2 Insert coin to continue ...
 
@@ -60,7 +64,9 @@ in. Night comes. You scratch at the door, but no one opens it. You go
 to the back door. Same. The last thing you remember hearing is the
 yipping of coyotes.
 
-!gameover Good thing you have 9 lives.
+!gameover Game Over.
+
+!c Good thing you have 9 lives.
 
 >4 Try Again
 
@@ -86,7 +92,9 @@ imagine a vicious dog is coming at you. It seems so real that you
 run outside to get away from it. You run aimlessly into the street
 and get hit by a car.
 
-!gameover Good thing you have 9 lives.
+!gameover Game Over.
+
+!c Good thing you have 9 lives.
 
 >6 Try Again
 
