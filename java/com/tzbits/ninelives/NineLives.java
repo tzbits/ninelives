@@ -7,13 +7,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.List;
 
 public class NineLives {
-
-  @Parameter
-  private List<String> parameters = new ArrayList<>();
 
   @Parameter(names = "--in",
              description = "The name of the input file.",
@@ -36,7 +31,7 @@ public class NineLives {
           .build()
           .parse(argv);
     } catch (ParameterException e) {
-      System.err.printf(e.getMessage() + "\n");
+      System.err.println(e.getMessage());
       System.exit(-1);
     }
     nineLives.run();
@@ -44,25 +39,31 @@ public class NineLives {
 
   private void run() {
     try {
-      Files.write(
+      Files.writeString(
           Path.of(outputFileName),
-          Transpiler.forFile(Path.of(inputFileName)).transpile().getBytes(),
+          Transpiler.forFile(Path.of(inputFileName)).transpile(),
           StandardOpenOption.CREATE,
-          StandardOpenOption.WRITE);
+          StandardOpenOption.WRITE,
+          StandardOpenOption.TRUNCATE_EXISTING);
     } catch (IOException e) {
-      System.err.printf(e.getMessage() + "\n");
+      System.err.println(e.getMessage());
       if (debug) {
-        e.printStackTrace();
+          //noinspection CallToPrintStackTrace
+          e.printStackTrace();
       }
       System.exit(-1);
     } catch (IllegalStateException e) {
+      // fatalError already printed the message with its line number.
       if (debug) {
+        //noinspection CallToPrintStackTrace
         e.printStackTrace();
       }
       System.exit(-1);
     } catch (Exception e) {
-      System.err.printf(e.getMessage() + "\n");
+      System.err.println(e.getMessage());
+      //noinspection CallToPrintStackTrace
       e.printStackTrace();
+      System.exit(-1);
     }
   }
 }

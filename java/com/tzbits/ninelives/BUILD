@@ -1,4 +1,4 @@
-# ninecops - transpiler for the 9c text game file format
+# ninelives - transpiler for the 9l text game file format
 
 load("@rules_java//java:defs.bzl", "java_binary")
 load("@rules_java//java:defs.bzl", "java_library")
