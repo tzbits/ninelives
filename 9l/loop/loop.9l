@@ -1,0 +1,19 @@
+| let time = 0;
+| function minutes() { return `minute${time > 1 ? "s" : ""}`; }
+
+=0=
+
+You've been standing in a dark room for _${++time} ${minutes()}_.
+
+There is an [oak door](>door) to your left.
+
+>door Enter oak door.
+>0 Stay where you are.
+
+=door=
+
+| const win = time < 4;
+
+You enter the door and find yourself in ${win ? "a garden" : "a lava pool"}.
+
+!gameover ${win ? "You Win!" : "You Lose!"}

@@ -261,6 +261,97 @@ public class TranspilerTest {
   }
 
   @Test
+  public void transpile_textWithMarkdown() {
+    String src =
+        """
+                =d50= It's happening!
+                **bold**, _italic_, ***bold-italic***, ~~strikethrough~~
+                """;
+    Transpiler tr = Transpiler.forSource(src);
+    String out = tr.transpile();
+    assertThat(out)
+        .isEqualTo(
+            imports +
+            nodePreamble("=d50= It's happening!", "=g:d50=") +
+            "game.say(`<b>bold</b>, <i>italic</i>, <b><i>bold-italic</i></b>, <del>strikethrough</del>`);\n" +
+            nodeEnd +
+            trailer);
+  }
+
+  @Test
+  public void transpile_textWithMarkdownAndInterpolation() {
+    String src =
+        """
+                =d50= It's happening!
+                **bold** ${"keep_me_as_is_"} and _italic_
+                Nested: ${ `${"inner"}` } **more**
+                """;
+    Transpiler tr = Transpiler.forSource(src);
+    String out = tr.transpile();
+    assertThat(out)
+        .isEqualTo(
+            imports +
+            nodePreamble("=d50= It's happening!", "=g:d50=") +
+            "game.say(`<b>bold</b> ${\"keep_me_as_is_\"} and <i>italic</i>\n" +
+            "Nested: ${ `${\"inner\"}` } <b>more</b>`);\n" +
+            nodeEnd +
+            trailer);
+  }
+
+  @Test
+  public void transpile_unclosedInterpolationFails() {
+    String src =
+        """
+                =d50= It's happening!
+                Unclosed: ${ some **bold**
+                Still bold: **yes**
+                """;
+    Transpiler tr = Transpiler.forSource(src);
+    assertThrows(RuntimeException.class, tr::transpile);
+  }
+
+  @Test
+  public void transpile_markdownWrappingInterpolation() {
+    String src =
+        """
+                =d50= It's happening!
+                **${howBad}**
+                _foo ${bar} baz_
+                """;
+    Transpiler tr = Transpiler.forSource(src);
+    String out = tr.transpile();
+    assertThat(out)
+        .isEqualTo(
+            imports +
+            nodePreamble("=d50= It's happening!", "=g:d50=") +
+            "game.say(`<b>${howBad}</b>\n" +
+            "<i>foo ${bar} baz</i>`);\n" +
+            nodeEnd +
+            trailer);
+  }
+
+  @Test
+  public void transpile_choicesWithMarkdown() {
+    String src =
+        """
+                =d50= It's happening!
+                >node **bold** choice
+                >node2 _italic_ choice
+                """;
+    Transpiler tr = Transpiler.forSource(src);
+    String out = tr.transpile();
+    assertThat(out)
+        .isEqualTo(
+            imports +
+            nodePreamble("=d50= It's happening!", "=g:d50=") +
+            "game.choose(\n" +
+            "game.choice(\"=g:node=\", `<b>bold</b> choice`),\n" +
+            "game.choice(\"=g:node2=\", `<i>italic</i> choice`));\n" +
+            nodeEnd +
+            trailer);
+  }
+
+  @Test
   public void transpile_codeWithNoSpaceAfterBar() {
     String src =
             """
@@ -285,6 +376,24 @@ public class TranspilerTest {
         assertThrows(IllegalStateException.class, tr::transpile);
     assertThat(e).hasMessageThat()
         .contains("Choice (>) found before the beginning of a node.");
+  }
+
+  @Test
+  public void transpile_codeWithMarkdownPassedThrough() {
+    String src =
+        """
+                =d50=
+                | game.say("This is **bold** in code");
+                """;
+    Transpiler tr = Transpiler.forSource(src);
+    String out = tr.transpile();
+    assertThat(out)
+        .isEqualTo(
+            imports +
+            nodePreamble("=d50=", "=g:d50=") +
+            "game.say(\"This is **bold** in code\");\n" +
+            nodeEnd +
+            trailer);
   }
 
   @Test

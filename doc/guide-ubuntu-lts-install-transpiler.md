@@ -1,4 +1,4 @@
-# Install the Nine Lives compiler
+# Install the Nine Lives compiler (Ubuntu LTS)
 
 ## Overview
 
@@ -22,24 +22,44 @@ In this guide, we will walk through the process of installing the necessary depe
 
 Duration: 1:00
 
+tldr;
+
+    sudo apt install openjdk-21-jdk python3 python-is-python3 entr
+    # Install bazelisk manually (see below)
+
 To build and run Nine Lives, we need a few specific tools. These instructions are based on Ubuntu 26.04 LTS defaults.
 
-First, let's install the Java Development Kit (JDK) version 21:
+First, check if you already have Java 21 or later installed:
+
+    java -version
+
+If you have version 21 or later, you can skip the JDK installation. Otherwise, install the Java Development Kit (JDK) version 21:
 
     sudo apt install openjdk-21-jdk
 
-Next, ensure you have a recent version of python installed:
+Next, check if you have a recent version of Python installed:
 
-    python3 --version
+    python --version
 
-Python 3.12 or later is recommended.
+If you have version 3.12 or later, you can skip the Python installation. Otherwise, install it:
+
+    sudo apt install python3 python-is-python3
 
 For Bazel, we recommend using **Bazelisk**, which automatically manages Bazel versions for you. Download the latest release from the [Bazelisk GitHub page](https://github.com/bazelbuild/bazelisk/releases) and make it executable in your path:
 
     # Example for downloading and installing bazelisk
-    sudo curl -L https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64 -o /usr/local/bin/bazelisk
-    sudo chmod +x /usr/local/bin/bazelisk
-    sudo ln -s /usr/local/bin/bazelisk /usr/local/bin/bazel
+    mkdir -p ~/.local/bin
+    curl -L https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64 -o ~/.local/bin/bazelisk
+    chmod +x ~/.local/bin/bazelisk
+    source ~/.bashrc  # in case you didn't already have ~/.local/bin
+
+Finally, check if you have `entr` installed. This tool is useful for automatically reloading the server when you change the source code:
+
+    entr -version
+
+If `entr` is not installed, you can install it using `apt`:
+
+    sudo apt install entr
 
 ## Clone the repository
 
@@ -91,7 +111,7 @@ To stop the server, press `Ctrl+C` in your terminal.
 Congratulations! You have successfully set up the Nine Lives compiler environment and run your first story locally.
 
 In this guide, we have:
-- Installed JDK 21, Python 3.13, and Bazelisk.
+- Installed JDK 21, Python 3.13, Bazelisk, and `entr`.
 - Verified the project structure using `bazel query`.
 - Launched a local story server using `bazel run`.
 

@@ -48,7 +48,7 @@ class GameView {
 
   /** Append a paragraph of text to {@link storyElt}. */
   say(txt) {
-    this.storyElt.innerHTML += `<p>${txt}</p>`
+    this.storyElt.innerHTML += `<p>${applyMarkdown(txt)}</p>`
   }
 
   /**
@@ -58,7 +58,7 @@ class GameView {
    */
   sayWith(styleCode, text) {
     this.storyElt.innerHTML += `<p class='${this.codeToStyle(
-        styleCode)}'>${text}</p>`
+        styleCode)}'>${applyMarkdown(text)}</p>`
   }
 
   /** @param {string} styleCode */
@@ -102,7 +102,7 @@ class GameView {
       if (game.enableDebug && game.debugVerbosity > 0) {
         text += ` (${choice.nodeId})`;
       }
-      linkElt.innerHTML = text;
+      linkElt.innerHTML = applyMarkdown(text);
       linkElt.onclick = function () {
         choicesElt.remove()
         game.step(choice)
@@ -482,9 +482,23 @@ export function back() {
   game.choose(game.choice(game.priorNode(), '< back'));
 }
 
+function applyMarkdown(s) {
+  if (!s) return s;
+  return s.replace(/\*\*\*(.*?)\*\*\*/g, '<b><i>$1</i></b>')
+          .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+          .replace(/_(.*?)_/g, '<i>$1</i>')
+          .replace(/~~(.*?)~~/g, '<del>$1</del>')
+          .replace(/\[(.*?)\]\(>(.*?)\)/g, (match, text, nodeId) => {
+            const resolvedId = game.resolveScope('=' + nodeId + '=');
+            return `<span class="inline-link" onclick="game.step(game.choice('${resolvedId}', '${text.replace(/'/g, "\\'")}'))">${text}</span>`;
+          });
+}
+
 // Makes it so refreshing the window resets the scroll position.
 window.addEventListener('load', () => { history.scrollRestoration = 'manual' });
 
 window.addEventListener('beforeunload', function (ignoreEvent) {
-  game.saveState();
+  if (this.gameDataKey && this.gameDataKey != "") {
+    game.saveState();
+  }
 });

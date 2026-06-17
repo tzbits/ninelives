@@ -3,6 +3,7 @@
 
 load("@rules_python//python:py_binary.bzl", "py_binary")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 
 ## Transpile
 
@@ -184,6 +185,20 @@ def _ninelives_story_macro_impl(name, visibility, srcs, static, story_js=None):
             "$(location " + story_imports_runfile_target + ")",
             "8080"
         ],
+    )
+
+    # Define the dev server using entr for automatic reloads.
+    sh_binary(
+        name = name + "_dev_server",
+        srcs = ["//tools:local_dev_server_bin.sh"],
+        data = [
+            "//third_party:entr_tool",
+            ":" + name + "_local_server",
+        ] + srcs,
+        args = [
+            "$(rootpath //third_party:entr_tool)",
+            "//%s:%s_local_server" % (native.package_name(), name),
+        ] + ["$(location %s)" % s for s in srcs],
     )
 
     pkg_tar(

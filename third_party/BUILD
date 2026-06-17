@@ -47,3 +47,10 @@ sh_binary(
     data = [],  # No data needed as the tool is on the local system
     visibility = ["//visibility:public"]
 )
+
+sh_binary(
+    name = "entr_tool",
+    srcs = ["entr_wrapper.sh"],
+    data = [],  # No data needed as the tool is on the local system
+    visibility = ["//visibility:public"]
+)

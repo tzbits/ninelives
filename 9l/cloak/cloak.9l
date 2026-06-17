@@ -99,7 +99,7 @@ You go back outside.
 !img img/operahouse.png
 
 | }
-| const howBad = (game.visitCount() > 1) ? "MUCH worse" : "worse";
+| const howBad = (game.visitCount() > 1) ? "***much*** worse" : "worse";
 
 The bright lights of the Opera House flood the south side of the
 street. The weather outside seems to be getting ${howBad}.
@@ -129,7 +129,7 @@ the street is to the north, and there are doorways south and
 west.
 
 
->inventory ? story.playerChanged; "inventory"
+>inventory ? story.playerChanged; "***inventory***"
 >cloak ? story.cloak.isVisible(); "examine cloak"
 >street ? game.visitCount("=street=") < 2; "north"
 >streetfail ? game.visitCount("=street=") >= 2; "north"
@@ -195,7 +195,7 @@ You are surrounded by darkness.
 =blunder=
 
 | if (game.visitCount() <= 1) {
-|     game.say(`In the dark? You could easily disturb something.`)
+|     game.say(`In the dark? You could easily _disturb_ something.`)
 | } else {
 |     game.say(`Blundering around in the dark isn't a good idea!`)
 |     story.message.isTrampled = true
@@ -222,14 +222,14 @@ some sort of message scrawled in the sawdust on the floor.
 
 | if (story.message.isTrampled) {
 
-The message has been carelessly trampled, making it difficult to
+The message has been _carelessly_ trampled, making it difficult to
 read. You can just distinguish the words...
 
 !gameover Game Over. You have lost.
 
 | } else {
 
-The message, neatly marked in the sawdust, reads...
+The message, _neatly_ marked in the sawdust, reads...
 
 !gameover Game Over. You have won!
 

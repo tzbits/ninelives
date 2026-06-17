@@ -2,7 +2,7 @@
 load("//java/com/tzbits/ninelives:rules.bzl", "ninelives_story")
 
 ninelives_story(
-    name = "cat",
-    srcs = ["thecat.9l", "themouse.9l"],
-    static = glob(["*.jpg"]),
+    name = "loop",
+    srcs = ["loop.9l"],
+    static = [],
 )

@@ -61,6 +61,11 @@ body {
     font-size: 80%;
  }
 
+.inline-link {
+    color: var(--link-color);
+    cursor: pointer;
+}
+
 div#banner-container {
     background-color: var(--background-color);
     z-index: 100;
@@ -113,14 +118,14 @@ div#story {
 }
 
 .choices .choice {
-    margin-top: 0px;
+    margin-top: 2em;
     margin-bottom: 1em;
     max-width: 20em;
 }
 
 .wrapped-choices {
     border-top: 0px solid #000;
-    margin-top: 0.5em;
+    margin-top: 2em;
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;

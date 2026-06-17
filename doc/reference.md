@@ -25,6 +25,15 @@ Something behind the book shelf smells like cheese.
 
 The node's identifier is in column 1, bracked by `=` characters. Stylistically, two blank lines should separate nodes.
 
+## Formatting
+
+The text in nodes and choices supports a subset of Markdown-style formatting:
+
+*   **Bold**: `**text**` becomes `<b>text</b>`
+*   *Italic*: `_text_` becomes `<i>text</i>`
+*   ***Bold-Italic***: `***text***` becomes `<b><i>text</i></b>`
+*   ~~Strikethrough~~: `~~text~~` becomes `<del>text</del>`
+
 ## Choices
 
 Choices are listed at the end of a node and contain a target node along with text to be displayed as the choice.

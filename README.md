@@ -1,59 +1,64 @@
 # Nine Lives
 
-Nine lives is a Javascript dsl for creating choice-based interactive fiction.
+Nine Lives is a JavaScript DSL for creating choice-based interactive fiction. 
 
-# Dependencies
+It allows you to leverage your existing knowledge of browser JavaScript by providing a simple DSL for branching stories that transpiles into web-based browser games.
 
-Here are the specific versions known to work. They are based on Ubuntu 24.04 LTS defaults.
+## Quick Example
 
-bazel 9.1.0 - https://bazel.build/install
+Here is a snippet of Nine Lives code (`.9l`). 
 
-  * Use [bazelisk](https://github.com/bazelbuild/bazelisk/releases) to install on Ubuntu.
+Markdown-like paragraphs are treated as implicit template literals to be printed. 
 
-Java [JDK 21](https://openjdk.org/projects/jdk/21/)
+Special leading characters are interpreted as the DSL. For example, explicit JavaScript is embedded with a leading '|'.
 
-  * `sudo apt install openjdk-21-jdk` on Ubuntu.
+```9l
+| let time = 0;
+| function minutes() { return `minute${time > 1 ? "s" : ""}`; }
 
-Python 3.13
+=0=
 
-# Usage
+You've been standing in a dark room for ${++time} ${minutes()}.
 
-To try "The Cat" cd into the repository and run,
+There is an [oak door](>door) to your left.
+
+>door Enter oak door.
+>0 Stay where you are.
+
+=door=
+
+| const win = time < 4;
+
+You enter the door and find yourself in ${win ? "a garden" : "a lava pool"}.
+
+!gameover ${win ? "You Win!" : "You Lose!"}
+```
+
+## Getting Started
+
+To start building and running Nine Lives stories, you'll need to set up your development environment. See detailed guides for:
+
+*   [Install on Ubuntu LTS](doc/guide-ubuntu-lts-install-transpiler.md)
+*   [Install with Homebrew (macOS/Linux)](doc/guide-homebrew-install-transpiler.md)
+
+## Usage
+
+Once you have the dependencies installed, you can try "The Cat" story included in the repository:
 
     $ bazel run //9l/cat:cat_local_server
-    Serving HTTP on port 8080
 
 Now visit `http://localhost:8080` and try the story.
 
-To release the project into a tar file:
+### Hot Reloading
 
-    $ bazel build 9l/cat:release
-    Target //9l/cat:cat_release up-to-date:
-      bazel-bin/9l/cat/cat_release.tar
+If you'd like the server to reload automatically when you change the source code:
 
-# TODO
+    $ bazel run //9l/cat:cat_dev_server
 
-* we need reconcile `story` state with `game.state`
+### Releasing
 
-* ! defaults to adding to adding the css class to the following text
-  * we should make that an explicit command:
+To package a story into a tar file for distribution:
 
-        !css funky Now this senetence is funky looking.
+    $ bazel build //9l/cat:release
 
-  * actually, we should make it so you can plug in custom functions for ! in JavaScript
-* make a better way to list vs wrap choices
-* consider adding a less cryptic conditional choice format:
-  * >some-node-id !if isThisTrue(foo) !then "go happily"
-* support line continuation with \\\n
-* redo inventory: make it something you import separately
-  * e.g. pair down game.js to the bare minimum
-  * provide other modules that can be imported into story.js
-* Sticky vs once-only choices
-  * sticky is the default, add once:
-  * >examineshoe !once Look closely at the shoe
-* alt-sequences: array of strings that get cycled through on each visit
-  * !seq sticky: settles on the final one when reached.
-  * !seq cycle: loops around (seq length modulo visit count)
-  * !seq once: display nothing after going past end.
-  * allow empty, allow nesting
-* !shuffle: random output from a sequence of strings
+The output will be at `bazel-bin/9l/cat/cat_release.tar`.
