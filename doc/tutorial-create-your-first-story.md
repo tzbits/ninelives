@@ -15,7 +15,7 @@ In this guide, we will create a simple branching narrative using the basic Nine 
 ### What you’ll need
 
 - A text editor (like VS Code, Sublime, or even Notepad)
-- The Nine Lives compiler installed (see [Install the Nine Lives compiler](guide-install-nine-lives-compiler.md))
+- The Nine Lives compiler installed (see [Install on Ubuntu LTS](guide-ubuntu-lts-install-transpiler.md) or [Install with Homebrew (macOS/Linux)](guide-homebrew-install-transpiler.md))
 
 ## Basic Syntax
 
@@ -26,7 +26,7 @@ The 9l format uses a few simple markers that we'll use throughout this guide:
 
 ## Step 1: Setting up your project
 
-Duration: 02:00
+Duration: 01:00
 
 Before we start writing our story, let's create a place for it to live.
 
@@ -36,17 +36,17 @@ First, create a directory for your story inside the `9l` directory. Let's call i
 mkdir 9l/my-story
 ```
 
-Next, create an empty file named `mycatstory.9l` inside that directory. You will be typing your story into this file as we go along.
+Next, create an empty file named `cat.9l` inside that directory. You will be typing your story into this file as we go along.
 
 ```bash
-touch 9l/my-story/mycatstory.9l
+touch 9l/my-story/cat.9l
 ```
 
 ## Step 2: The Beginning
 
 Duration: 01:00
 
-Every story needs a starting point. By convention, we usually start with node `0`. Open `9l/my-story/mycatstory.9l` in your editor and add our first node:
+Every story needs a starting point. By convention, we usually start with node `0`. Open `9l/my-story/cat.9l` in your editor and add our first node:
 
 ```9l
 =0=
@@ -141,7 +141,7 @@ load("//java/com/tzbits/ninelives:rules.bzl", "ninelives_story")
 
 ninelives_story(
     name = "my_story",
-    srcs = ["mycatstory.9l"],
+    srcs = ["cat.9l"],
     static = [],
 )
 ```
@@ -150,7 +150,7 @@ In this file:
 1. `load(...)` imports the Nine Lives build rules.
 2. `ninelives_story(...)` defines a new story target.
 3. `name = "my_story"` is the name of your target (you'll use this to run it).
-4. `srcs = ["mycatstory.9l"]` tells Bazel which story files to include.
+4. `srcs = ["cat.9l"]` tells Bazel which story files to include.
 5. `static = []` is for static assets like images. Since we don't have any yet, we leave it as an empty list.
 
 ## Step 7: Running your story
@@ -193,4 +193,4 @@ To see how this story expands with more complex paths, images, and even a perspe
 > ⓘ **Check your progress!**
 > You can always compare your snippets with the full "Cat and Mouse" source code in `9l/cat/thecat.9l` and `9l/cat/themouse.9l`.
 
-* Read `doc/reference.md` for a full list of available 9l commands.
+* Read [doc/reference.md](reference.md) for a full list of available 9l commands.
