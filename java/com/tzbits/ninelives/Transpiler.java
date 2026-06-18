@@ -15,6 +15,12 @@ public class Transpiler {
    */
   public String scope = "g";  // g for global scope
 
+  /**
+   * The wrap state for the next block of choices.
+   * null means use the default (game.wrapChoices).
+   */
+  private Boolean nextChoicesWrap = null;
+
   private final ImmutableList<String> fileLines;
 
   private Transpiler(ImmutableList<String> fileLines) {
@@ -82,7 +88,7 @@ public class Transpiler {
               }
               yield transpileNode(out, sourceLines);
           }
-          case COMMAND -> transpileCommand(out, sourceLines);
+          case COMMAND -> transpileCommand(out, sourceLines, level);
           case CODE -> transpileCode(out, sourceLines);
           case CHOICE -> {
               if (level == 0) {
@@ -107,6 +113,8 @@ public class Transpiler {
     out.append(String.format("game.player.location = \"%s\";\n", id));
     out.append(String.format("game.scope = \"%s\";\n", JsStrings.forDoubleQuoted(scope)));
 
+    nextChoicesWrap = null;
+
     while (!rest.isEmpty()
            && !rest.getFirst().lineType().equals(LineType.NODE)) {
       rest = transpileInNode(out, rest);
@@ -128,14 +136,19 @@ public class Transpiler {
 
   private ImmutableList<SourceLine> transpileChoice(
       StringBuilder out, ImmutableList<SourceLine> sourceLines) {
-    out.append("game.choose(");
+    String methodName = "choose";
+    if (nextChoicesWrap != null) {
+      methodName = nextChoicesWrap ? "chooseWrap" : "chooseNowrap";
+      nextChoicesWrap = null;
+    }
+    out.append("game.").append(methodName).append("(");
     int len = sourceLines.size();
     for (int i = 0; i < len; i++) {
       SourceLine sourceLine = sourceLines.get(i);
 
       if (!sourceLine.isType(LineType.CHOICE)) {
         out.append(");\n");
-        return  sourceLines.subList(i, sourceLines.size());
+        return sourceLines.subList(i, sourceLines.size());
       }
 
       boolean isLast = i == len - 1 || !sourceLines.get(i + 1).isType(LineType.CHOICE);
@@ -153,33 +166,102 @@ public class Transpiler {
     String line = sourceLine.line();
     int spacePos = line.indexOf(' ');
     int idEnd = spacePos == -1 ? line.length() : spacePos;
-    String nodeId = JsStrings.forDoubleQuoted(resolveNodeId(line.substring(1, idEnd)));
+    String rawId = line.substring(1, idEnd);
+    
+    String visitLimit = null;
+    int slashPos = rawId.lastIndexOf('/');
+    if (slashPos != -1) {
+      visitLimit = rawId.substring(slashPos + 1);
+      rawId = rawId.substring(0, slashPos);
+    }
+
+    String nodeId = JsStrings.forDoubleQuoted(resolveNodeId(rawId));
     String rest = line.substring(idEnd).trim();
     String comma = isLast ? "" : ",";
 
-    if (rest.isEmpty() || rest.charAt(0) != '?') {
-      // Plain choice; any ';' is just prose.
-      String txt = rest.isEmpty() ? "continue" : rest;
-      return String.format("game.choice(\"%s\", `%s`)%s",
-                           nodeId,
-                           JsStrings.forTemplateLiteral(txt),
-                           comma);
+    String condition = null;
+    String txt = null;
+
+    if (rest.startsWith(":if ")) {
+      int scPos = rest.indexOf(';');
+      if (scPos == -1) {
+        throw sourceLine.fatalError("Conditional choice (:if) is missing ';'.");
+      }
+      condition = rest.substring(4, scPos).trim();
+      txt = rest.substring(scPos + 1).trim();
+    } else if (!rest.isEmpty() && rest.charAt(0) == '?') {
+      int scPos = rest.indexOf(';');
+      if (scPos == -1) {
+        throw sourceLine.fatalError("Conditional choice (?) is missing ';'.");
+      }
+      condition = rest.substring(1, scPos).trim();
+      txt = rest.substring(scPos + 1).trim();
     }
 
-    int scPos = rest.indexOf(';');
-    if (scPos == -1) {
-      throw sourceLine.fatalError("Conditional choice (?) is missing ';'.");
+    if (condition == null) {
+      // Plain choice; might have ';' for data.
+      String choiceText = rest.isEmpty() ? "continue" : rest;
+      String choiceData = null;
+      int scPos = choiceText.indexOf(';');
+      if (scPos != -1) {
+        String possibleData = choiceText.substring(scPos + 1).trim();
+        if (!possibleData.isEmpty() && (possibleData.startsWith("'") || possibleData.startsWith("\"") || possibleData.startsWith("{"))) {
+          choiceData = possibleData;
+          choiceText = choiceText.substring(0, scPos).trim();
+        }
+      }
+
+      String choiceExpr;
+      if (choiceData != null) {
+        choiceExpr = String.format("game.choice(\"%s\", `%s`, %s)",
+                             nodeId,
+                             JsStrings.forTemplateLiteral(choiceText),
+                             choiceData);
+      } else {
+        choiceExpr = String.format("game.choice(\"%s\", `%s`)",
+                             nodeId,
+                             JsStrings.forTemplateLiteral(choiceText));
+      }
+
+      if (visitLimit != null) {
+          return String.format("(game.visitCount(\"%s\") < %s) ? %s : false%s",
+                  nodeId, visitLimit, choiceExpr, comma);
+      }
+      return choiceExpr + comma;
     }
-    String condition = rest.substring(1, scPos).trim();
-    String txt = rest.substring(scPos + 1).trim();
+
+    if (visitLimit != null) {
+        condition = String.format("game.visitCount(\"%s\") < %s && %s", nodeId, visitLimit, condition);
+    }
+
+    String choiceData = null;
+    int lastScPos = txt.lastIndexOf(';');
+    if (lastScPos != -1) {
+      String possibleData = txt.substring(lastScPos + 1).trim();
+      if (!possibleData.isEmpty() && (possibleData.startsWith("'") || possibleData.startsWith("\"") || possibleData.startsWith("{"))) {
+        choiceData = possibleData;
+        txt = txt.substring(0, lastScPos).trim();
+      }
+    }
+
     // Note: second arg to choice is not quoted
     // so the user can put js expressions there.
-    return String.format(
-        "(%s) ? game.choice(\"%s\", %s) : false%s",
-        condition,
-        nodeId,
-        txt,
-        comma);
+    if (choiceData != null) {
+      return String.format(
+          "(%s) ? game.choice(\"%s\", %s, %s) : false%s",
+          condition,
+          nodeId,
+          txt,
+          choiceData,
+          comma);
+    } else {
+      return String.format(
+          "(%s) ? game.choice(\"%s\", %s) : false%s",
+          condition,
+          nodeId,
+          txt,
+          comma);
+    }
   }
 
   private ImmutableList<SourceLine> transpileCode(
@@ -203,13 +285,23 @@ public class Transpiler {
   private record Cmd(String name, String body) {}
 
   private ImmutableList<SourceLine> transpileCommand(
-      StringBuilder out, ImmutableList<SourceLine> sourceLines) {
+      StringBuilder out, ImmutableList<SourceLine> sourceLines, int level) {
     String line = sourceLines.getFirst().line();
     Cmd cmd = parseCmd(line);
 
     if (cmd.name.equals("img")) {
       String fmt = "game.img(\"%s\");\n";
       out.append(String.format(fmt, JsStrings.forDoubleQuoted(cmd.body)));
+      return sourceLines.subList(1, sourceLines.size());
+    }
+
+    if (cmd.name.equals("choices")) {
+      boolean wrap = !cmd.body.equals("nowrap");
+      if (level == 0) {
+        out.append(String.format("game.wrapChoices = %b;\n", wrap));
+      } else {
+        nextChoicesWrap = wrap;
+      }
       return sourceLines.subList(1, sourceLines.size());
     }
 
@@ -247,24 +339,26 @@ public class Transpiler {
       return sourceLines.subList(j, sourceLines.size());
     }
 
-    out.append("game.say(`");
-
-    for (int i = j; i < sourceLines.size(); i++) {
+    StringBuilder textContent = new StringBuilder();
+    int i = j;
+    for (; i < sourceLines.size(); i++) {
       SourceLine line = sourceLines.get(i);
 
       if (!line.isType(LineType.TEXT) || line.isEmpty()) {
-        out.append("`);\n");
-        return sourceLines.subList(i, sourceLines.size());
+        break;
       }
 
       if (i != j) {
-        out.append("\n");
+        textContent.append("\n");
       }
-      out.append(JsStrings.forTemplateLiteral(line.line()));
+      textContent.append(line.line());
     }
 
+    out.append("game.say(`");
+    out.append(JsStrings.forTemplateLiteral(textContent.toString()));
     out.append("`);\n");
-    return ImmutableList.of();
+
+    return sourceLines.subList(i, sourceLines.size());
   }
 
   private static int firstNonEmpty(ImmutableList<SourceLine> sourceLines) {

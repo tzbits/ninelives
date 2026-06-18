@@ -80,10 +80,11 @@ class GameView {
    * @param {Game} game
    * @param {Choice[]} choices
    */
-  displayChoices(game, choices) {
+  displayChoices(game, choices, wrapChoices) {
     const gameView = this
     const choicesElt = document.createElement("div")
-    choicesElt.classList.add(game.wrapChoices ? 'wrapped-choices' : 'choices')
+    const wrap = (typeof wrapChoices === 'boolean') ? wrapChoices : game.wrapChoices;
+    choicesElt.classList.add(wrap ? 'wrapped-choices' : 'choices')
     if (game.useRandomChoiceOrder) {
       choices.sort(function () {
         // ignoring args a & b.
@@ -117,7 +118,7 @@ class GameView {
    * Removes any html element with the class, "choices", from the document.
    */
   removeChoices() {
-    const element = document.querySelector('.choices');
+    const element = document.querySelector('.choices, .wrapped-choices');
     if (element) {
       element.parentNode.removeChild(element);
     }
@@ -443,13 +444,21 @@ class Game {
     return new Choice(this.resolveScope(nodeId), txt, data)
   }
 
-  chooseFrom(choices) {
+  chooseFrom(choices, wrapChoices) {
     const game = this
-    this.gameView.displayChoices(game, choices)
+    this.gameView.displayChoices(game, choices, wrapChoices)
   }
 
   choose(...choices) {
     return this.chooseFrom(choices.slice())
+  }
+
+  chooseWrap(...choices) {
+    return this.chooseFrom(choices.slice(), true)
+  }
+
+  chooseNowrap(...choices) {
+    return this.chooseFrom(choices.slice(), false)
   }
 
   img(url) {

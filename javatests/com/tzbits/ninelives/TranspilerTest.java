@@ -311,6 +311,20 @@ public class TranspilerTest {
   }
 
   @Test
+  public void transpile_multilineInterpolation() {
+    String src =
+        """
+                =d50=
+                You are at the cemetery gate. There is a path leading back uphill
+                to the east${allowDownhill ? ` and a path leading downhill to the
+                west` : ``}.
+                """;
+    Transpiler tr = Transpiler.forSource(src);
+    String out = tr.transpile();
+    assertThat(out).contains("to the east${allowDownhill ? ` and a path leading downhill to the\nwest` : ``}.");
+  }
+
+  @Test
   public void transpile_markdownWrappingInterpolation() {
     String src =
         """
@@ -369,6 +383,45 @@ public class TranspilerTest {
   }
 
   @Test
+  public void transpile_choicesWithIfCondition() {
+    String src =
+        """
+                =d50=
+                >node :if papersRead(); "Go home"
+                >node2 :if !papersRead(); "Stay here"
+                """;
+    Transpiler tr = Transpiler.forSource(src);
+    String out = tr.transpile();
+    assertThat(out).contains("(papersRead()) ? game.choice(\"=g:node=\", \"Go home\") : false");
+    assertThat(out).contains("(!papersRead()) ? game.choice(\"=g:node2=\", \"Stay here\") : false");
+  }
+
+  @Test
+  public void transpile_choiceWithData() {
+    String src =
+        """
+        =start=
+        >node choice text; 'DATA'
+        """;
+    Transpiler tr = Transpiler.forSource(src);
+    String out = tr.transpile();
+    // It should be passed as a separate argument to game.choice
+    assertThat(out).contains("game.choice(\"=g:node=\", `choice text`, 'DATA')");
+  }
+
+  @Test
+  public void transpile_choiceWithDataInIfCondition() {
+    String src =
+        """
+        =start=
+        >node :if true; "choice text"; 'DATA'
+        """;
+    Transpiler tr = Transpiler.forSource(src);
+    String out = tr.transpile();
+    assertThat(out).contains("game.choice(\"=g:node=\", \"choice text\", 'DATA')");
+  }
+
+  @Test
   public void transpile_choiceWithoutNodeFails() {
     String src = "> I'm a choice without a node.\n";
     Transpiler tr = Transpiler.forSource(src);
@@ -423,6 +476,125 @@ public class TranspilerTest {
             nodePreamble("=d51= Second Node", "=g:d51=") +
             "console.log('This is some code.');\n" +
             "game.say(`This is some text for the second node.`);\n" +
+            nodeEnd +
+            trailer);
+  }
+  @Test
+  public void transpile_choicesWrap() {
+    String src =
+        """
+        =start=
+        !choices wrap
+        >node1 Choice 1
+        >node2 Choice 2
+        """;
+    Transpiler tr = Transpiler.forSource(src);
+    String out = tr.transpile();
+    assertThat(out)
+        .isEqualTo(
+            imports +
+            nodePreamble("=start=", "=g:start=") +
+            "game.chooseWrap(\n" +
+            "game.choice(\"=g:node1=\", `Choice 1`),\n" +
+            "game.choice(\"=g:node2=\", `Choice 2`));\n" +
+            nodeEnd +
+            trailer);
+  }
+
+  @Test
+  public void transpile_choicesNowrap() {
+    String src =
+        """
+        =start=
+        !choices nowrap
+        >node1 Choice 1
+        >node2 Choice 2
+        """;
+    Transpiler tr = Transpiler.forSource(src);
+    String out = tr.transpile();
+    assertThat(out)
+        .isEqualTo(
+            imports +
+            nodePreamble("=start=", "=g:start=") +
+            "game.chooseNowrap(\n" +
+            "game.choice(\"=g:node1=\", `Choice 1`),\n" +
+            "game.choice(\"=g:node2=\", `Choice 2`));\n" +
+            nodeEnd +
+            trailer);
+  }
+
+  @Test
+  public void transpile_choicesGlobalDefault() {
+    String src =
+        """
+        !choices nowrap
+        =start=
+        >node1 Choice 1
+        """;
+    Transpiler tr = Transpiler.forSource(src);
+    String out = tr.transpile();
+    assertThat(out)
+        .contains("game.wrapChoices = false;");
+    assertThat(out)
+        .contains("game.choose(\n" +
+                  "game.choice(\"=g:node1=\", `Choice 1`));");
+  }
+
+  @Test
+  public void transpile_choiceVisitLimit() {
+    String src =
+        """
+        =start=
+        >node/1 This can only be visited once.
+        """;
+    Transpiler tr = Transpiler.forSource(src);
+    String out = tr.transpile();
+
+    assertThat(out)
+        .isEqualTo(
+            imports +
+            nodePreamble("=start=", "=g:start=") +
+            "game.choose(\n" +
+            "(game.visitCount(\"=g:node=\") < 1) ? game.choice(\"=g:node=\", `This can only be visited once.`) : false);\n" +
+            nodeEnd +
+            trailer);
+  }
+
+  @Test
+  public void transpile_choiceVisitLimitWithExistingCondition() {
+    String src =
+        """
+        =start=
+        >node/1 ? someCondition(); "This is conditional and limited"
+        """;
+    Transpiler tr = Transpiler.forSource(src);
+    String out = tr.transpile();
+
+    assertThat(out)
+        .isEqualTo(
+            imports +
+            nodePreamble("=start=", "=g:start=") +
+            "game.choose(\n" +
+            "(game.visitCount(\"=g:node=\") < 1 && someCondition()) ? game.choice(\"=g:node=\", \"This is conditional and limited\") : false);\n" +
+            nodeEnd +
+            trailer);
+  }
+
+  @Test
+  public void transpile_choiceVisitLimitWithSlashInProse() {
+    String src =
+        """
+        =start=
+        >node This is a choice / with a slash
+        """;
+    Transpiler tr = Transpiler.forSource(src);
+    String out = tr.transpile();
+    assertThat(out)
+        .isEqualTo(
+            imports +
+            nodePreamble("=start=", "=g:start=") +
+            "game.choose(\n" +
+            "game.choice(\"=g:node=\", `This is a choice / with a slash`));\n" +
             nodeEnd +
             trailer);
   }

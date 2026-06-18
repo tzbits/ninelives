@@ -129,12 +129,12 @@ the street is to the north, and there are doorways south and
 west.
 
 
->inventory ? story.playerChanged; "***inventory***"
->cloak ? story.cloak.isVisible(); "examine cloak"
->street ? game.visitCount("=street=") < 2; "north"
->streetfail ? game.visitCount("=street=") >= 2; "north"
->bar ? !story.cloak.playerIsWearing(); "south"
->dark ? story.cloak.playerIsWearing(); "south"
+>inventory :if story.playerChanged; "***inventory***"
+>cloak :if story.cloak.isVisible(); "examine cloak"
+>street :if game.visitCount("=street=") < 2; "north"
+>streetfail :if game.visitCount("=street=") >= 2; "north"
+>bar :if !story.cloak.playerIsWearing(); "south"
+>dark :if story.cloak.playerIsWearing(); "south"
 >cloakroom west
 
 
@@ -161,11 +161,11 @@ There is a cloak on the floor.
 
 >hook examine hook
 >foyer east
->dropcloak ? canDrop && !game.isVisited('=hook='); "drop cloak"
->hangcloak ? canDrop && game.isVisited('=hook='); "drop cloak"
->takecloak ? story.cloak.canTake(); "take cloak"
->inventory ? story.playerChanged; "inventory"
->cloak ? story.cloak.isVisible(); "examine cloak"
+>dropcloak :if canDrop && !game.isVisited('=hook='); "drop cloak"
+>hangcloak :if canDrop && game.isVisited('=hook='); "drop cloak"
+>takecloak :if story.cloak.canTake(); "take cloak"
+>inventory :if story.playerChanged; "inventory"
+>cloak :if story.cloak.isVisible(); "examine cloak"
 
 
 =hook= Hook

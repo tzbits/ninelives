@@ -10,7 +10,7 @@ Start of line syntax:
 *   `=` begins a node identifier, which begins a node.
 *   `|` is followed by a space is treated as literal JavaScript code.
 *   `!` followed by a token is a command.
-*   `>` followed by a node id is a choice.
+*   `>` followed by a node id and optional `/n` visit limit is a choice.
 
 
 ## Nodes
@@ -36,7 +36,7 @@ The text in nodes and choices supports a subset of Markdown-style formatting:
 
 ## Choices
 
-Choices are listed at the end of a node and contain a target node along with text to be displayed as the choice.
+Choices are listed at the end of a node and contain a target node along with text to be displayed as the choice. Extra data can be attached to a choice by appending it after a semicolon.
 
 Here are two choices between going to node `=1=` and node `=2`:
 
@@ -46,8 +46,10 @@ Here are two choices between going to node `=1=` and node `=2`:
 Something behind the book shelf smells like cheese.
 
 >1 Sniff behind the book shelf.
->2 Meow loudly.
+>2 Meow loudly.; 'EXTRA_DATA'
 ```
+
+In the example above, if the user chooses the second option, `${choice.data}` in node `=2=` will contain the string `'EXTRA_DATA'`.
 
 Instead of numbering nodes, they may also be named. Stylistically, names should be all lowercase, like identifiers in python.
 
@@ -101,6 +103,7 @@ Somehow after that I dozed off.
 
 A line starting with `!` is a command.
 
+*   `!choices [wrap|nowrap]`: Sets whether choices for the next block (or globally if used outside a node) should be displayed in a wrapping horizontal layout or a vertical list.
 *   `!img <url>`: Changes the source of the banner image.
 *   `!scope <name>`: Sets the scope for later node IDs in the file.
 *   `!c <text>`: Displays centered text (uses the `.center` CSS class).
@@ -205,14 +208,33 @@ John then looks at you sideways and says, "Please don't make a mess in there."
 A conditional choice has a boolean test expression.
 
 ```
->nodeid ? testexpression; choicetext
+>nodeid :if testexpression; choicetextexpression
 ```
 
-If the test is false, the choice is omitted from the choice list. For example,
+If the test is false, the choice is omitted from the choice list. Otherwise, the string given by choicetextexpression is used as the choice text. For example,
 
 ```
->dropcloak ? story.cloak.canDrop(); "drop Cloak"
->takecloak ? story.cloak.canTake(); "take Cloak"
+>dropcloak :if story.cloak.canDrop(); "drop Cloak"
 ```
 
-Everything on the line after the `?` must be valid JavaScript.
+The two expressions after the `:if`, separated by ';' must be valid JavaScript. You can also append extra data after another semicolon.
+
+```
+>dropcloak :if story.cloak.canDrop(); "drop Cloak"; {weight: 10}
+```
+
+Note: The older syntax `>nodeid ? testexpression; choicetextexpression` is also supported but `:if` is preferred.
+
+### Choice Visit Limits
+
+A choice can be limited to a certain number of visits by appending `/n` to the node ID, where `n` is the maximum number of times the target node can be visited before the choice disappears.
+
+```
+>node/1 This choice disappears after one visit to "node".
+```
+
+This can be combined with conditional choices:
+
+```
+>secret/1 :if story.hasKey; "Enter secret room"
+```
