@@ -4,6 +4,7 @@
 load("@rules_python//python:py_binary.bzl", "py_binary")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_pkg//pkg:zip.bzl", "pkg_zip")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 
 ## Transpile
@@ -200,6 +201,23 @@ def _ninelives_story_macro_impl(name, visibility, srcs, static, story_js=None, g
         ],
     )
 
+    static_files_target = ":" + name + "_static_files"
+    pkg_files(
+        name = static_files_target[1:],
+        srcs = static,
+        strip_prefix = strip_prefix.from_pkg(),
+    )
+
+    release_files_target = ":" + name + "_release_files"
+    pkg_files(
+        name = release_files_target[1:],
+        srcs = [
+            transpiled_target,
+            story_imports_runfile_target,
+            story_game_html_runfiles_target,
+        ],
+    )
+
     dev_runfiles_target = ":" + name + "_dev_story"
     native.filegroup(
         name = dev_runfiles_target[1:],
@@ -257,9 +275,11 @@ def _ninelives_story_macro_impl(name, visibility, srcs, static, story_js=None, g
     )
 
     pkg_zip(
-        name = name + "_release",
-        srcs = [runfiles_target],
-        package_dir = "/",
+    name = name + "_release",
+    srcs = [
+        static_files_target,
+        release_files_target,
+    ],
     )
 
 
