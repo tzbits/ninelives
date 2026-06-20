@@ -25,10 +25,13 @@ export const story = {};
 
 window.onload = function () {
   if (game.enableDebug && game.debugOnLoadFn) {
-    game.debugOnLoadFn()
+    game.debugOnLoadFn();
     return;
   }
-  game.step(game.choice('=0=', ''))
+  if (game.restoreFromStorage()) {
+    return;
+  }
+  game.startNew();
 }
 
 console.log("-- story.js loaded");

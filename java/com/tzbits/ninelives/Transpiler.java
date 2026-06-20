@@ -202,10 +202,10 @@ public class Transpiler {
       // Plain choice; might have ';' for data.
       String choiceText = rest.isEmpty() ? "continue" : rest;
       String choiceData = null;
-      int scPos = choiceText.indexOf(';');
+      int scPos = choiceText.lastIndexOf(';');
       if (scPos != -1) {
         String possibleData = choiceText.substring(scPos + 1).trim();
-        if (!possibleData.isEmpty() && (possibleData.startsWith("'") || possibleData.startsWith("\"") || possibleData.startsWith("{"))) {
+        if (!possibleData.isEmpty() && (possibleData.startsWith("'") || possibleData.startsWith("\"") || possibleData.startsWith("{") || Character.isDigit(possibleData.charAt(0)))) {
           choiceData = possibleData;
           choiceText = choiceText.substring(0, scPos).trim();
         }
@@ -238,7 +238,7 @@ public class Transpiler {
     int lastScPos = txt.lastIndexOf(';');
     if (lastScPos != -1) {
       String possibleData = txt.substring(lastScPos + 1).trim();
-      if (!possibleData.isEmpty() && (possibleData.startsWith("'") || possibleData.startsWith("\"") || possibleData.startsWith("{"))) {
+      if (!possibleData.isEmpty() && (possibleData.startsWith("'") || possibleData.startsWith("\"") || possibleData.startsWith("{") || Character.isDigit(possibleData.charAt(0)))) {
         choiceData = possibleData;
         txt = txt.substring(0, lastScPos).trim();
       }

@@ -26,26 +26,19 @@ A handsome cloak, of velvet trimmed with satin, and slightly
 splattered with raindrops. Its blackness is so deep that it
 almost seems to suck light from the room.
 
-| story.cloak.noticed = true;
-
 | back();
 
 
 =inventory=
 
-| // set this to false so inventory disappears as a choice
+| // Set "changed" to false so inventory disappears as a choice
 | // until something changes.
-| story.playerChanged = false;
-| if (story.cloak.playerIsWearing()) {
-
-You're wearing a velvet cloak.
-
-| story.cloak.noticed = true;
-|
+| story.player.inventoryChanged = false;
+| if (story.cloak.isPlayerWearing()) {
+|   story.cloak.noticed = true;
+|   game.say("You're wearing a velvet cloak.");
 | } else {
-
-You have no possessions.
-
+|   game.say("You have no possessions.");
 | }
 | back();
 
@@ -53,20 +46,16 @@ You have no possessions.
 =dropcloak=
 
 | story.cloak.dropTo(game.priorNode());
-| story.playerChanged = true;
-
-You drop the cloak.
-
+| story.player.inventoryChanged = true;
+| game.say("You drop the cloak.");
 | back();
 
 
 =takecloak=
 
 | story.cloak.take();
-| story.playerChanged = true;
-
-You put on the cloak.
-
+| story.player.inventoryChanged = true;
+| game.say("You put on the cloak.");
 | back();
 
 
@@ -77,7 +66,7 @@ You take off the velvet cloak.
 You put the velvet cloak on the small brass hook.
 
 | story.cloak.dropTo("=hook=");
-| story.playerChanged = true;
+| story.player.inventoryChanged = true;
 |
 | back();
 
@@ -99,7 +88,9 @@ You go back outside.
 !img img/operahouse.png
 
 | }
-| const howBad = (game.visitCount() > 1) ? "***much*** worse" : "worse";
+| const howBad = (game.visitCount() > 1)
+|     ? "***much*** worse"
+|     : "worse";
 
 The bright lights of the Opera House flood the south side of the
 street. The weather outside seems to be getting ${howBad}.
@@ -107,7 +98,7 @@ street. The weather outside seems to be getting ${howBad}.
 >foyer south
 
 
-=streetfail= Instead of going north from the foyer
+=streetfail=
 
 You can't go back outside now.
 
@@ -128,19 +119,18 @@ and gold, with glittering chandeliers overhead. The entrance from
 the street is to the north, and there are doorways south and
 west.
 
-
->inventory :if story.playerChanged; "***inventory***"
+>inventory :if story.player.inventoryChanged; "***inventory***"
 >cloak :if story.cloak.isVisible(); "examine cloak"
 >street :if game.visitCount("=street=") < 2; "north"
 >streetfail :if game.visitCount("=street=") >= 2; "north"
->bar :if !story.cloak.playerIsWearing(); "south"
->dark :if story.cloak.playerIsWearing(); "south"
+>bar :if !story.cloak.isPlayerWearing(); "south"
+>dark :if story.cloak.isPlayerWearing(); "south"
 >cloakroom west
 
 
 =cloakroom=
 
-| if (story.cloak.locationIs("=hook=")) {
+| if (story.cloak.isLocation("=hook=")) {
 |   game.img('img/cloakroomwithcloak.png')
 | } else {
 |   game.img('img/cloakroom.png')
@@ -151,26 +141,26 @@ Cloakroom
 The walls of this small room were clearly once lined with hooks,
 though now only one remains. The exit is a door to the east.
 
-| if (story.cloak.location == game.currentNode()) {
+| if (story.cloak.isLocation(game.currentNode())) {
 
 There is a cloak on the floor.
 
 | }
 
-| const canDrop = story.cloak.canDrop();
+| const canDrop = story.cloak.isDropAllowed();
 
 >hook examine hook
 >foyer east
 >dropcloak :if canDrop && !game.isVisited('=hook='); "drop cloak"
 >hangcloak :if canDrop && game.isVisited('=hook='); "drop cloak"
->takecloak :if story.cloak.canTake(); "take cloak"
->inventory :if story.playerChanged; "inventory"
+>takecloak :if story.cloak.isTakeAllowed(); "take cloak"
+>inventory :if story.player.inventoryChanged; "inventory"
 >cloak :if story.cloak.isVisible(); "examine cloak"
 
 
 =hook= Hook
 
-| let details = story.cloak.locationIs("=hook=")
+| let details = story.cloak.isLocation("=hook=")
 |   ? `with a cloak hanging on it`
 |   : `screwed to the wall`
 
@@ -198,7 +188,7 @@ You are surrounded by darkness.
 |     game.say(`In the dark? You could easily _disturb_ something.`)
 | } else {
 |     game.say(`Blundering around in the dark isn't a good idea!`)
-|     story.message.isTrampled = true
+|     story.message.trampled = true;
 | }
 
 >blunder look around some more
@@ -220,7 +210,7 @@ some sort of message scrawled in the sawdust on the floor.
 
 =message=
 
-| if (story.message.isTrampled) {
+| if (story.message.trampled) {
 
 The message has been _carelessly_ trampled, making it difficult to
 read. You can just distinguish the words...

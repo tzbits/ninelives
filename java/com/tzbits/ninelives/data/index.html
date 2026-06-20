@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, minimum-scale=1.0, user-scalable=1">
+    <meta charset="utf-8">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="game.css">
+</head>
+
+<body>
+<div id='banner-container'><img id='banner'/></div>
+<div id='story'></div>
+<div id='controls'>
+    <div id='undo' onclick="game.undo()">undo</div>
+    <div id='reset' onclick="game.confirmReset()">reset</div>
+    <div id='redo' onclick="game.redo()">redo</div>
+</div>
+
+<script type="module">
+  import {game} from "./game.js";
+  import "./env.js";
+  import "./story-imports.js";
+  import "./story.js";
+
+  if (typeof window.GAME_CONFIG !== 'undefined') {
+    Object.assign(game.config, window.GAME_CONFIG);
+  }
+
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowLeft') {
+      game.undo();
+    } else if (event.key === 'ArrowRight') {
+      game.redo();
+    }
+  });
+</script>
+
+</body>
+
+</html>

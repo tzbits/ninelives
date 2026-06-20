@@ -225,6 +225,18 @@ public class TranspilerTest {
   }
 
   @Test
+  public void transpile_choiceWithQuotedTextAndData() {
+    String src =
+            """
+            =start=
+            >talktorebecca-1 "What do you mean?"; 1
+            """;
+    Transpiler tr = Transpiler.forSource(src);
+    String out = tr.transpile();
+    assertThat(out).contains("game.choice(\"=g:talktorebecca-1=\", `\"What do you mean?\"`, 1)");
+  }
+
+  @Test
   public void transpile_textStartingWithEquals() {
     String src =
             """

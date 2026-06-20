@@ -171,7 +171,7 @@ export class AbstractGameNode {
   }
 
   firstVisit() {
-    return game.nodeVisits[this.nodeId] === 1;
+    return game.visitCount(this.nodeId) === 1;
   }
 
   enteredFrom(...ids) {
@@ -243,15 +243,18 @@ class Game {
   /** current scope for functions that use unqualified node ids. */
   scope = "g";  // g for global scope
 
-  /** Key that game state is stored under. */
-  gameDataKey = "";
-
   /**
    * All game states.
    * Persisted to localStorage as one blob.
    * @type {object}
    */
   state = {};
+
+  /**
+   * The state before the current node runs. Used for diffing.
+   * @type {object}
+   */
+  preState = {};
 
   /** Whether to randomize the order of choices. Defaults to true. */
   useRandomChoiceOrder = true;
@@ -266,6 +269,27 @@ class Game {
   enableDebug = false
   debugVerbosity = 0;
 
+  /** @private */
+  replaying = false;
+
+  /**
+   * History of choices for redo.
+   * @type {Choice[]}
+   */
+  redoHistory = []
+
+  /**
+   * History of state diffs for redo.
+   * @type {object[]}
+   */
+  redoStateHistory = []
+
+  config = {
+    gameName: 'ninelives-game',
+    gameVersion: '0.0.1',
+    persistStateHistory: true
+  };
+
   /** Set this function to run on load and take control of stepping through a path in the story. */
   debugOnLoadFn = null
 
@@ -275,21 +299,20 @@ class Game {
    */
   timeStep = 0
 
-  /**
-   * The node id that was last run.
-   * '' is the starting state before any nodes have run. First node is '=0='.
-   * @private {string}
-   */
-  atNodeId = ''
-
   /** Node ids are added to this array as they are stepped into. */
-  gamePath = []
+  nodeHistory = []
 
   /**
-   * The count of visits to particular nodes, keyed by node id.
-   * @type {Record<string, number>}
+   * Parallel array to nodeHistory containing diff objects of state changes.
+   * @type {object[]}
    */
-  nodeVisits = {}
+  stateHistory = []
+
+  /**
+   * State properties set before any node runs.
+   * @type {object}
+   */
+  initialState = {}
 
   /** Place to hold game items. */
   items = {}
@@ -299,9 +322,20 @@ class Game {
   }
 
   reset() {
-    this.nodeVisits = {};
-    this.gamePath = [];
+    this.nodeHistory = [];
+    this.stateHistory = [];
+    this.redoHistory = [];
+    this.redoStateHistory = [];
     this.timeStep = 0;
+    this.state = Object.assign({}, this.initialState);
+    this.preState = {};
+  }
+
+  confirmReset() {
+    if (confirm("Are you sure you want to reset the game? This will clear all history.")) {
+      this.reset();
+      this.startNew();
+    }
   }
 
   resolveScope(id) {
@@ -316,56 +350,166 @@ class Game {
     return "=" + this.scope + ":" + id.substring(1);
   }
 
-  loadState(gameDataKey) {
-    this.gameDataKey = gameDataKey;
-    try {
-      const raw = localStorage.getItem(gameDataKey);
-      const parsed = JSON.parse(raw);
-      if (parsed && typeof parsed === "object") {
-        this.state = parsed;
-      }
-    } catch (e) {
-      console.log(`Could not load state for ${gameDataKey}: ${e}`);
-    }
-  }
-
-  saveState() {
-    if (this.gameDataKey && this.gameDataKey != "") {
-      localStorage.setItem(this.gameDataKey, JSON.stringify(this.state));
-    } else {
-      throw Error(
-          `No gameDataKey set for game.saveState(). Try starting your game with game.loadState("MyGameDataKey");`)
-    }
-  }
-
   /**
    * Move one step forward in time and call the game node for `toNodeId`.
    * @param {Choice} choice
    */
-  step(choice) {
+  step(choice, isRedo = false) {
     if (this.enableDebug) {
       this.outputDebugInfo(choice)
     }
-    let toNodeId = this.resolveScope(choice.nodeId)
-    this.atNodeId = toNodeId
-    this.gamePath.push(toNodeId)
-    this.timeStep = this.timeStep + 1
-    if (toNodeId in this.nodeVisits) {
-      this.nodeVisits[toNodeId]++
-    } else {
-      this.nodeVisits[toNodeId] = 1
+
+    if (!isRedo && !this.replaying) {
+      this.redoHistory = [];
+      this.redoStateHistory = [];
     }
+
+    if (this.nodeHistory.length === 0 && !this.replaying) {
+      this.initialState = Object.assign({}, this.state);
+    }
+
+    this.state = Object.assign({}, this.initialState);
+    this.preState = {};
+    // During replay, step() is called for the i-th node.
+    // this.stateHistory already contains diffs for [0...i].
+    // BUT wait, the i-th node's diff was produced AFTER it ran.
+    // Re-reading design: "reconstructs game.state by iterating through the state history from oldest to newest... After this step both objects are identical snapshots of accumulated state. ... Runs the node function. ... Diffs game.state against preState. ... Pushes the diff object onto the state history."
+    
+    // So for the i-th node, it should only see diffs from [0...i-1].
+    const currentDiffs = this.replaying ? this.stateHistory.slice(0, -1) : this.stateHistory;
+
+    for (const diff of currentDiffs) {
+      Object.assign(this.state, diff);
+    }
+    Object.assign(this.preState, this.state);
+
+    let toNodeId = this.resolveScope(choice.nodeId)
+    choice.nodeId = toNodeId; // Ensure the stored choice has the resolved ID
+    this.nodeHistory.push(choice)
+    this.timeStep = this.timeStep + 1
 
     this.gameView.startStoryElt(this.timeStep)
 
-    if (!(this.atNodeId in this.gameNodes)) {
-      throw `The node ${this.atNodeId} was not found by game.step`
+    if (!(toNodeId in this.gameNodes)) {
+      throw `The node ${toNodeId} was not found by game.step`
     }
 
     // @type {AbstractGameNode}
-    const nd = this.gameNodes[this.atNodeId];
+    const nd = this.gameNodes[toNodeId];
     nd.exec(this, choice);
+
+    if (!this.replaying) {
+      // Persist state change history
+      const diff = {};
+      for (const key in this.state) {
+        if (this.state[key] !== this.preState[key]) {
+          diff[key] = this.state[key];
+        }
+      }
+      // Also check for deleted keys (though not explicitly required by design, it's good practice)
+      for (const key in this.preState) {
+        if (!(key in this.state)) {
+          diff[key] = undefined;
+        }
+      }
+      this.stateHistory.push(diff);
+
+      this.persist();
+    }
+
     this.gameView.showStoryElt();
+  }
+
+  getStoragePrefix() {
+    return `9l:${this.config.gameName}:${this.config.gameVersion}:`;
+  }
+
+  persist() {
+    const prefix = this.getStoragePrefix();
+    localStorage.setItem(`${prefix}nodeHistory`, JSON.stringify(this.nodeHistory));
+    localStorage.setItem(`${prefix}redoHistory`, JSON.stringify(this.redoHistory));
+    localStorage.setItem(`${prefix}initialState`, JSON.stringify(this.initialState));
+    if (this.config.persistStateHistory) {
+      localStorage.setItem(`${prefix}stateHistory`, JSON.stringify(this.stateHistory));
+      localStorage.setItem(`${prefix}redoStateHistory`, JSON.stringify(this.redoStateHistory));
+    }
+  }
+
+  loadHistoryFromStorage() {
+    const prefix = this.getStoragePrefix();
+    const nodes = localStorage.getItem(`${prefix}nodeHistory`);
+    const states = localStorage.getItem(`${prefix}stateHistory`);
+    const redoNodes = localStorage.getItem(`${prefix}redoHistory`);
+    const redoStates = localStorage.getItem(`${prefix}redoStateHistory`);
+    const initial = localStorage.getItem(`${prefix}initialState`);
+    return {
+      nodeHistory: nodes ? JSON.parse(nodes) : null,
+      stateHistory: states ? JSON.parse(states) : null,
+      redoHistory: redoNodes ? JSON.parse(redoNodes) : null,
+      redoStateHistory: redoStates ? JSON.parse(redoStates) : null,
+      initialState: initial ? JSON.parse(initial) : null,
+    };
+  }
+
+  hasSavedSession() {
+    const { nodeHistory } = this.loadHistoryFromStorage();
+    return Array.isArray(nodeHistory) && nodeHistory.length > 0;
+  }
+
+  restoreFromStorage() {
+    const { nodeHistory, stateHistory, redoHistory, redoStateHistory, initialState } = this.loadHistoryFromStorage();
+    if (nodeHistory && nodeHistory.length > 0) {
+      this.initialState = initialState || {};
+      this.replay(nodeHistory, Array.isArray(stateHistory) ? stateHistory : []);
+      this.redoHistory = Array.isArray(redoHistory) ? redoHistory : [];
+      this.redoStateHistory = Array.isArray(redoStateHistory) ? redoStateHistory : [];
+      return true;
+    }
+    return false;
+  }
+
+  startNew() {
+    this.step(this.choice('=0=', ''));
+  }
+
+  replay(history, states = []) {
+    this.replaying = true;
+    try {
+      this.reset();
+      for (let i = 0; i < history.length; i++) {
+        const choice = history[i];
+        const diff = states[i] || {};
+        // Note: step() will not update state history when replaying == true.
+        this.stateHistory.push(diff);
+        this.step(choice);
+      }
+    } finally {
+      this.replaying = false;
+    }
+  }
+
+  undo() {
+    if (this.nodeHistory.length > 1) {
+      const currentChoice = this.nodeHistory.pop();
+      const currentDiff = this.stateHistory.pop();
+      this.redoHistory.push(currentChoice);
+      this.redoStateHistory.push(currentDiff);
+
+      const lastChoice = this.nodeHistory.pop();
+      this.stateHistory.pop();
+      // Re-run the last node
+      this.step(lastChoice, /*isRedo=*/ true);
+    }
+    this.persist();
+  }
+
+  redo() {
+    if (this.redoHistory.length > 0) {
+      const choice = this.redoHistory.pop();
+      const diff = this.redoStateHistory.pop();
+      this.step(choice, /*isRedo=*/ true);
+      this.persist();
+    }
   }
 
   getNode(id) {
@@ -374,28 +518,29 @@ class Game {
 
   /**
    * Returns the nodeId set that `step` is running. This is meant to be
-   * referred to * from other downstream methods called within the node's
+   * referred to from other downstream methods called within the node's
    * exec method.
    */
   currentNode() {
-    return this.atNodeId
+    return this.nodeHistory.length > 0 ? this.nodeHistory[this.nodeHistory.length - 1].nodeId : ''
   }
 
   priorNode() {
-    return this.gamePath.slice(-2)[0]
+    const choice = this.nodeHistory.slice(-2)[0];
+    return choice ? choice.nodeId : undefined;
   }
 
   visitCount(nodeId) {
+    const countVisits = (id) => this.nodeHistory.filter((choice) => choice.nodeId === id).length;
     if (nodeId === undefined) {
-      return this.nodeVisits[this.currentNode()]
+      return countVisits(this.currentNode())
     }
     const id = this.resolveScope(nodeId);
     const nd = this.gameNodes[id];
     if (!nd) {
       throw `${nodeId} (${id}) not found.`;
     }
-    const ret = this.nodeVisits[id];
-    return ret || 0;
+    return countVisits(id);
   }
 
   isVisited(nodeId) {
@@ -404,7 +549,7 @@ class Game {
     if (!nd) {
       throw `${nodeId} (${id}) not found.`;
     }
-    return id in this.nodeVisits && this.nodeVisits[id] > 0
+    return this.visitCount(id) > 0
   }
 
   runNodes(choiceList) {
@@ -488,7 +633,7 @@ export function visited(nodeId) {
 }
 
 export function back() {
-  game.choose(game.choice(game.priorNode(), '< back'));
+  game.choose(game.choice(game.priorNode(), 'back'));
 }
 
 function applyMarkdown(s) {
@@ -506,8 +651,3 @@ function applyMarkdown(s) {
 // Makes it so refreshing the window resets the scroll position.
 window.addEventListener('load', () => { history.scrollRestoration = 'manual' });
 
-window.addEventListener('beforeunload', function (ignoreEvent) {
-  if (this.gameDataKey && this.gameDataKey != "") {
-    game.saveState();
-  }
-});

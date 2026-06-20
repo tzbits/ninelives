@@ -41,7 +41,7 @@ body {
     background-color: var(--background-color);
 
     /* text */
-    font: normal 1.3em/1.4em "EB Garamond", Garamond, Georgia, serif;
+    font: normal 1.3em/1.4em "Comic Neue", sans-serif;
     color: var(--text-color);
     -webkit-font-smoothing: subpixel-antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -58,7 +58,9 @@ body {
     display: inline-block;
     cursor: pointer;
     /*box-shadow: 0 1px 3px 0 var(--border-color), 0 3px 10px 0 rgba(0,0,0,0.19);*/
-    font-size: 80%;
+    font-family: "Press Start 2P", system-ui;
+    font-size: 70%;
+    text-transform: uppercase;
  }
 
 .inline-link {
@@ -89,6 +91,36 @@ div#story {
     margin-bottom: calc(100vh);
 }
 
+#controls {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: var(--max-page-width);
+    height: 1.5em;
+    background-color: var(--background-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: "Press Start 2P", system-ui;
+    font-size: 0.8em;
+    text-transform: uppercase;
+    border-top: 1px solid var(--border-color);
+    padding: 0 1em;
+    box-sizing: border-box;
+    z-index: 1000;
+}
+
+#controls div {
+    cursor: pointer;
+    color: var(--link-color);
+}
+
+#controls div:hover {
+    text-decoration: underline;
+}
+
 .StoryElt {
   transition: opacity 0.5s ease-out;
   opacity: 1;
@@ -113,19 +145,18 @@ div#story {
 
 .choices {
    border-top: 0px solid #000;
-   margin-top: 0em;
+   margin-top: 2em;
    padding-top: 0em;
 }
 
 .choices .choice {
     margin-top: 0em;
-    margin-bottom: 0em;
-    max-width: 20em;
+    margin-bottom: 1em;
 }
 
 .wrapped-choices {
     border-top: 0px solid #000;
-    margin-top: 1em;
+    margin-top: 2em;
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
@@ -137,7 +168,7 @@ div#story {
     margin-top: 0px;
     margin-bottom: 1em;
     margin-right: 1em;
-    max-width: 20em;
+    text-align: "center";
 }
 
 .gameover {

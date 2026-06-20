@@ -3,6 +3,7 @@
 
 load("@rules_python//python:py_binary.bzl", "py_binary")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@rules_pkg//pkg:zip.bzl", "pkg_zip")
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 
 ## Transpile
@@ -100,6 +101,18 @@ _story_imports_runfile = rule(
 
 def _game_html_runfiles_impl(ctx):
     outputs = []
+    # Create env.js
+    env_js = ctx.actions.declare_file("env.js")
+    content = """
+window.GAME_CONFIG = {
+  gameName: "%s",
+  gameVersion: "%s",
+  persistStateHistory: %s
+};
+""" % (ctx.attr.game_name, ctx.attr.game_version, "true" if ctx.attr.persist_state_history else "false")
+    ctx.actions.write(env_js, content)
+    outputs.append(env_js)
+
     for src in ctx.files.srcs:
         dest = ctx.actions.declare_file(src.basename)
         ctx.actions.run_shell(
@@ -119,18 +132,22 @@ _game_html_runfiles = rule(
             mandatory = True,
             doc = "Copies the pre-written files that make up the game environment.",
         ),
-    }
+        "game_name": attr.string(mandatory = True),
+        "game_version": attr.string(default = "1.0.0"),
+        "persist_state_history": attr.bool(default = True),
+    },
 )
 
 ## Story macro
 
-def _ninelives_story_macro_impl(name, visibility, srcs, static, story_js=None):
+def _ninelives_story_macro_impl(name, visibility, srcs, static, story_js=None, game_version="1.0.0"):
     """
     Args:
         name: The name of the story.
         srcs: A list of 9l source files.
         static: A list of static files (e.g., HTML, CSS, images).
         story_js: Optional custom story code that is loaded by the index.html file.
+        game_version: Version string for the game.
     """
     transpiled_target = ":" + name + "_transpiled"
     _transpile(
@@ -157,6 +174,18 @@ def _ninelives_story_macro_impl(name, visibility, srcs, static, story_js=None):
     _game_html_runfiles(
         name = story_game_html_runfiles_target[1:],
         srcs = game_html_srcs,
+        game_name = name,
+        game_version = game_version,
+        persist_state_history = True,
+    )
+
+    dev_game_html_runfiles_target = ":" + name + "_dev_game_html_runfiles";
+    _game_html_runfiles(
+        name = dev_game_html_runfiles_target[1:],
+        srcs = game_html_srcs,
+        game_name = name,
+        game_version = game_version,
+        persist_state_history = False,
     )
 
     # Define a filegroup to collect all files to be accessed as runfiles
@@ -168,6 +197,16 @@ def _ninelives_story_macro_impl(name, visibility, srcs, static, story_js=None):
             transpiled_target,
             story_imports_runfile_target,
             story_game_html_runfiles_target,
+        ],
+    )
+
+    dev_runfiles_target = ":" + name + "_dev_story"
+    native.filegroup(
+        name = dev_runfiles_target[1:],
+        srcs = static + [
+            transpiled_target,
+            story_imports_runfile_target,
+            dev_game_html_runfiles_target,
         ],
     )
 
@@ -187,26 +226,40 @@ def _ninelives_story_macro_impl(name, visibility, srcs, static, story_js=None):
         ],
     )
 
+    # Define the dev local serving executable.
+    py_binary(
+        name = name + "_dev_local_server",
+        srcs = ["//tools:local_www_server_bin.py"],
+        main = "//tools:local_www_server_bin.py",
+        data = [
+            story_imports_runfile_target,
+            dev_runfiles_target,
+            transpiled_target,
+        ],
+        args = [
+            "$(location " + story_imports_runfile_target + ")",
+            "8080"
+        ],
+    )
+
     # Define the dev server using entr for automatic reloads.
     sh_binary(
         name = name + "_dev_server",
         srcs = ["//tools:local_dev_server_bin.sh"],
         data = [
             "//third_party:entr_tool",
-            ":" + name + "_local_server",
-        ] + srcs,
+            ":" + name + "_dev_local_server",
+        ] + srcs + ([story_js] if story_js else []),
         args = [
             "$(rootpath //third_party:entr_tool)",
-            "//%s:%s_local_server" % (native.package_name(), name),
-        ] + ["$(location %s)" % s for s in srcs],
+            "//%s:%s_dev_local_server" % (native.package_name(), name),
+        ] + ["$(location %s)" % s for s in srcs] + (["$(location %s)" % story_js] if story_js else []),
     )
 
-    pkg_tar(
+    pkg_zip(
         name = name + "_release",
-        # Strip the path up to the runfiles root to keep the
-        # repository path intact within the tarball.
-        strip_prefix = "$(rootpath " + runfiles_target + ")",
         srcs = [runfiles_target],
+        package_dir = "/",
     )
 
 
@@ -225,6 +278,10 @@ ninelives_story = macro(
         "story_js": attr.label(
             allow_files = True,
             mandatory = False,
+            configurable = False,
+        ),
+        "game_version": attr.string(
+            default = "1.0.0",
             configurable = False,
         ),
     },

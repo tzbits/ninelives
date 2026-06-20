@@ -131,27 +131,6 @@ The `game` object provides access to the game engine's state and methods.
 *   `game.useRandomChoiceOrder`: Boolean. If `true`, the order of choices is randomized (default: `true`).
 *   `game.wrapChoices`: Boolean. If `true`, choices are displayed in a wrapping horizontal layout (default: `true`). If `false`, choices are displayed in a vertical list.
 
-## Bazel Macro Reference
-
-The `ninelives_story` macro in `rules.bzl` is used to define a story target.
-
-```python
-load("//java/com/tzbits/ninelives:rules.bzl", "ninelives_story")
-
-ninelives_story(
-    name = "my_story",
-    srcs = ["story.9l"],
-    static = ["banner.jpg", "extra.css"],
-    story_js = "custom_story.js",
-)
-```
-
-### Parameters
-
-*   `name`: The name of the target. This defines the name of the local server target (`<name>_local_server`) and the release tarball (`<name>_release`).
-*   `srcs`: A list of `.9l` source files.
-*   `static`: A list of static files to be included in the story distribution (e.g., images, CSS files).
-*   `story_js`: (Optional) A label for a custom JavaScript file that defines the `story` object. If omitted, a default empty story object is used.
 
 ## Variables and State
 
@@ -238,3 +217,34 @@ This can be combined with conditional choices:
 ```
 >secret/1 :if story.hasKey; "Enter secret room"
 ```
+
+## Bazel Macro Reference
+
+The `ninelives_story` macro in `rules.bzl` is used to define story targets.
+
+```python
+load("//java/com/tzbits/ninelives:rules.bzl", "ninelives_story")
+
+ninelives_story(
+    name = "my_story",
+    srcs = ["story.9l"],
+    static = ["banner.jpg", "extra.css"],
+    story_js = "custom_story.js",
+)
+```
+
+### Parameters
+
+*   `name`: The name of the target. This defines the name of the local server target (`<name>_local_server`) and the release zip file (`<name>_release`).
+*   `srcs`: A list of `.9l` source files.
+*   `static`: A list of static files to be included in the story distribution (e.g., images, CSS files).
+*   `story_js`: (Optional) A label for a custom JavaScript file that defines the `story` object. If omitted, a default empty story object is used.
+
+### Targets
+
+The macro defines the following targets:
+
+*   `<name>_local_server`: A local web server for testing the story.
+*   `<name>_dev_server`: A development server that automatically restarts when source files change.
+*   `<name>_release`: A zip file containing the compiled story and all static assets, ready for distribution.
+  * `index.html` is at the root of the zip file.

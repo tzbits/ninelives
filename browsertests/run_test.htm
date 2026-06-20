@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browser test</title>
+</head>
+<body>
+<pre id="screen">
+
+</pre>
+<script type="module">
+  import { logToScreen } from "/browsertests/TestUtil.js";
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const scriptPath = urlParams.get('path');
+  logToScreen(`Running '${scriptPath}'...`)
+  if (scriptPath) {
+    import(scriptPath).catch(err => {
+      logToScreen(`Error loading test script "${scriptPath}": ${err}`);
+    });
+  } else {
+    logToScreen("Error: No test script path provided in 'path' URL parameter.");
+  }
+</script>
+</body>
+</html>

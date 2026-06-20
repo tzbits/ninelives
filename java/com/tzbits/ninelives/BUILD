@@ -46,7 +46,7 @@ filegroup(
     srcs = [
         "data/game.css",
         "data/game.js",
-        "data/index.htm",
+        "data/index.html",
     ],
 )
 
