@@ -57,8 +57,10 @@ If you'd like the server to reload automatically when you change the source code
 
 ### Releasing
 
-To package a story into a tar file for distribution:
+To package a story for distribution:
 
-    $ bazel build //9l/cat:release
+    $ bazel build //9l/cat:cat_release
 
-The output will be at `bazel-bin/9l/cat/cat_release.tar`.
+The output will be a zip file at `bazel-bin/9l/cat/cat_release.zip`.
+
+You can upload this zip file to <http://itch.io> as an HTML project, or unzip it and deploy it to a web server.
